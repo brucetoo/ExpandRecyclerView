@@ -23,7 +23,16 @@ public class DividerItemDecoration extends RecyclerView.ItemDecoration {
      * divider.
      *
      * @param divider     A divider {@code Drawable} to be drawn on the RecyclerView
-     * @param headerCount only draw divider in normal item,so ingore the headers
+     */
+    public DividerItemDecoration(Drawable divider) {
+        this.mDivider = divider;
+    }
+
+    /**
+     * Takes in a {@link Drawable} to be used as the interior divider.
+     *
+     * @param divider     A divider {@code Drawable} to be drawn on the RecyclerView
+     * @param headerCount only draw divider in normal item,so ignore the headers
      */
     public DividerItemDecoration(Drawable divider, int headerCount) {
         this.mDivider = divider;

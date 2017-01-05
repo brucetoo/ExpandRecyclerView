@@ -108,6 +108,9 @@ public class MainActivity extends AppCompatActivity {
         Drawable divider = ContextCompat.getDrawable(this, R.drawable.shape_divider);
         mRecyclerView.addItemDecoration(new DividerItemDecoration(divider,mRecyclerView.getAllHeaderCount()));
 
+        //TODO add item animator
+        //https://github.com/wasabeef/recyclerview-animators
+
         mRecyclerView.setAdapter(mAdapter);
         mRecyclerView.setRefreshing();
     }
