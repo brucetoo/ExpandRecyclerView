@@ -42,6 +42,18 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        new ExpandRecyclerView.Builder()
+            .setCanPullDownRefresh(true)
+            .setCanPullUpRefresh(false)
+            .setPullToRefreshText("Pull To Refresh 1")
+            .setReleaseToRefreshText("Release To Refresh 1")
+            .setRefreshingText("Refreshing 1")
+            .setRefreshedSuccessText("Refresh Success 1")
+            .setRefreshedFailedText("Refresh Failed 1")
+            .setLoadMoreText("Loading...1")
+            .setLoadNoMoreText("No More Data 1")
+            .Build(mRecyclerView);
+
         mRecyclerView.setRefreshListener(new ExpandRecyclerView.OnRefreshListener() {
 
             @Override
@@ -54,7 +66,7 @@ public class MainActivity extends AppCompatActivity {
                             mListDatas.add("newItem" + i);
                         }
                         mAdapter.notifyDataSetChanged();
-                        mRecyclerView.setRefreshComplete();
+                        mRecyclerView.setRefreshComplete(false);
                     }
                 }, 2000);
             }

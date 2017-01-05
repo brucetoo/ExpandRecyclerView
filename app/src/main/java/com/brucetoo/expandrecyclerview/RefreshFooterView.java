@@ -1,7 +1,6 @@
 package com.brucetoo.expandrecyclerview;
 
 import android.content.Context;
-import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -9,6 +8,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
+import static com.brucetoo.expandrecyclerview.IRefreshFooter.FooterState.VIEW_STATE_LOADING;
 
 /**
  * Created by Bruce Too
@@ -21,11 +22,10 @@ public class RefreshFooterView extends LinearLayout implements IRefreshFooter {
     private View mRootView;
     private View mLoadingView;
     private TextView mTextLoading;
-    private FooterState mCurrentState = IRefreshFooter.FooterState.VIEW_STATE_LOADING;
+    private FooterState mCurrentState = VIEW_STATE_LOADING;
 
-    private String mLoadingDesc = "Loading...";
-//    private String mLoadedDesc = "Loaded";
-    private String mNoMoreDesc = "No More Data";
+    private String mLoadMoreText = "Loading...";
+    private String mLoadNoMoreText = "No More Data";
 
     public RefreshFooterView(Context context) {
         super(context);
@@ -62,14 +62,10 @@ public class RefreshFooterView extends LinearLayout implements IRefreshFooter {
     }
 
     @Override
-    public void onLoading(String loading) {
+    public void onLoading() {
         setVisibility(VISIBLE);
         mLoadingView.setVisibility(VISIBLE);
-        if(TextUtils.isEmpty(loading)){
-            mTextLoading.setText(mLoadingDesc);
-        }else {
-            mTextLoading.setText(loading);
-        }
+        mTextLoading.setText(mLoadMoreText);
     }
 
     @Override
@@ -78,30 +74,31 @@ public class RefreshFooterView extends LinearLayout implements IRefreshFooter {
     }
 
     @Override
-    public void onNoMore(String noMore) {
+    public void onNoMore() {
         setVisibility(VISIBLE);
         mLoadingView.setVisibility(GONE);
-
-        if(TextUtils.isEmpty(noMore)){
-            mTextLoading.setText(mNoMoreDesc);
-        }else {
-            mTextLoading.setText(noMore);
-        }
+        mTextLoading.setText(mLoadNoMoreText);
     }
 
     @Override
-    public void updateState(FooterState state,String stateDesc) {
+    public void setStateDesc(String loadingDesc,String noMoreDesc) {
+        this.mLoadMoreText = loadingDesc;
+        this.mLoadNoMoreText = noMoreDesc;
+    }
+
+    @Override
+    public void updateState(FooterState state) {
         if(mCurrentState == state) return;
 
         switch (state){
             case VIEW_STATE_LOADING:
-                onLoading(stateDesc);
+                onLoading();
                 break;
             case VIEW_STATE_COMPLETE:
                 onComplete();
                 break;
             case VIEW_STATE_NO_MORE:
-                onNoMore(stateDesc);
+                onNoMore();
                 break;
         }
 

@@ -48,6 +48,101 @@ public class ExpandRecyclerView extends RecyclerView {
     private boolean mIsLoadingMore;
     private boolean mIsNoMoreData;
 
+    public static class Builder {
+
+        boolean canPullDownRefresh;
+        boolean canPullUpRefresh;
+        IRefreshHeader refreshHeader;
+        IRefreshFooter refreshFooter;
+        String pullToRefreshText;
+        String releaseToRefreshText;
+        String refreshingText;
+        String refreshedSuccessText;
+        String refreshedFailedText;
+        String loadMoreText;
+        String loadNoMoreText;
+
+        public Builder setCanPullDownRefresh(boolean canPullDownRefresh) {
+            this.canPullDownRefresh = canPullDownRefresh;
+            return this;
+        }
+
+        public Builder setCanPullUpRefresh(boolean canPullUpRefresh) {
+            this.canPullUpRefresh = canPullUpRefresh;
+            return this;
+        }
+
+        public Builder setRefreshHeader(IRefreshHeader refreshHeader) {
+            this.refreshHeader = refreshHeader;
+            return this;
+        }
+
+        public Builder setRefreshFooter(IRefreshFooter refreshFooter) {
+            this.refreshFooter = refreshFooter;
+            return this;
+        }
+
+        public Builder setPullToRefreshText(String pullToRefreshText) {
+            this.pullToRefreshText = pullToRefreshText;
+            return this;
+        }
+
+        public Builder setReleaseToRefreshText(String releaseToRefreshText) {
+            this.releaseToRefreshText = releaseToRefreshText;
+            return this;
+        }
+
+        public Builder setRefreshingText(String refreshingText) {
+            this.refreshingText = refreshingText;
+            return this;
+        }
+
+        public Builder setRefreshedSuccessText(String refreshedSuccessText) {
+            this.refreshedSuccessText = refreshedSuccessText;
+            return this;
+        }
+
+        public Builder setRefreshedFailedText(String refreshedFailedText) {
+            this.refreshedFailedText = refreshedFailedText;
+            return this;
+        }
+
+        public Builder setLoadMoreText(String loadMoreText) {
+            this.loadMoreText = loadMoreText;
+            return this;
+        }
+
+        public Builder setLoadNoMoreText(String loadNoMoreText) {
+            this.loadNoMoreText = loadNoMoreText;
+            return this;
+        }
+
+        public void Build(ExpandRecyclerView recyclerView) {
+
+            recyclerView.mCanPullDownRefresh = this.canPullDownRefresh;
+            recyclerView.mCanPullUpRefresh = this.canPullUpRefresh;
+            recyclerView.mRefreshHeaderView = this.refreshHeader;
+            recyclerView.mRefreshFooterView = this.refreshFooter;
+
+            if (recyclerView.mCanPullDownRefresh && refreshHeader == null) {
+                recyclerView.mRefreshHeaderView = new RefreshHeaderView(recyclerView.getContext());
+            }
+
+            if (recyclerView.mCanPullUpRefresh && refreshFooter == null) {
+                recyclerView.mRefreshFooterView = new RefreshFooterView(recyclerView.getContext());
+            }
+
+            if (recyclerView.mRefreshHeaderView != null) {
+                recyclerView.mRefreshHeaderView.setStateDesc(pullToRefreshText,
+                    releaseToRefreshText, refreshingText, refreshedSuccessText, refreshedFailedText);
+            }
+
+            if (recyclerView.mRefreshFooterView != null) {
+                recyclerView.mRefreshFooterView.setStateDesc(loadMoreText, loadNoMoreText);
+            }
+        }
+    }
+
     /**
      * Listener for pull-to-refresh action
      */
@@ -75,28 +170,14 @@ public class ExpandRecyclerView extends RecyclerView {
 
     public ExpandRecyclerView(Context context) {
         super(context);
-        init();
     }
 
     public ExpandRecyclerView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
-        init();
     }
 
     public ExpandRecyclerView(Context context, @Nullable AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
-        init();
-    }
-
-    private void init() {
-
-        if (mCanPullDownRefresh) {
-            mRefreshHeaderView = new RefreshHeaderView(getContext());
-        }
-
-        if (mCanPullUpRefresh) {
-            mRefreshFooterView = new RefreshFooterView(getContext());
-        }
     }
 
     @Override
@@ -112,13 +193,13 @@ public class ExpandRecyclerView extends RecyclerView {
                 if (mCanPullDownRefresh && !mIsLoadingMore && mRefreshHeaderView.getView().getParent() != null) {
                     int pullDownDis = mRefreshHeaderView.onPullDown(deltaX / PULL_REFRESH_RATIO);
                     if (mOnPullDeltaChangeListeners != null && mOnPullDeltaChangeListeners.size() != 0) {
-                        for (OnPullDeltaChangeListener listener : mOnPullDeltaChangeListeners){
+                        for (OnPullDeltaChangeListener listener : mOnPullDeltaChangeListeners) {
                             listener.onPullDeltaChange(pullDownDis);
                         }
                     }
 
                     //When pull action not reach VIEW_STATE_REFRESHING,we don't care about touch event.let the parent to handle this
-                    if (mRefreshHeaderView.getVisibleHeight() > 0
+                    if (mRefreshHeaderView.getRefreshHeaderHeight() > 0
                         && mRefreshHeaderView.getCurrentState().ordinal() < IRefreshHeader.HeaderState.VIEW_STATE_REFRESHING.ordinal()) {
                         return false;
                     }
@@ -164,7 +245,7 @@ public class ExpandRecyclerView extends RecyclerView {
             && layoutManager.getItemCount() > layoutManager.getChildCount()) {
 
             if (mRefreshFooterView != null && !mIsNoMoreData) {
-                mRefreshFooterView.updateState(IRefreshFooter.FooterState.VIEW_STATE_LOADING, "");
+                mRefreshFooterView.updateState(IRefreshFooter.FooterState.VIEW_STATE_LOADING);
                 mIsLoadingMore = true;
                 if (mOnRefreshListener != null) {
                     mOnRefreshListener.onLoadMore();
@@ -429,18 +510,21 @@ public class ExpandRecyclerView extends RecyclerView {
     /**
      * Update {@link ExpandRecyclerView}'s state to complete({@link IRefreshHeader.HeaderState#VIEW_STATE_REFRESHED})
      * and reset to {@link IRefreshHeader.HeaderState#VIEW_STATE_NORMAL}
+     *
+     * @param success refresh success or failed
      */
-    public void setRefreshComplete() {
+    public void setRefreshComplete(boolean success) {
 
         if (mRefreshHeaderView != null) {
             mRefreshHeaderView.updateState(IRefreshHeader.HeaderState.VIEW_STATE_REFRESHED);
+            mRefreshHeaderView.onRefreshState(success);
         }
 
         //When pull down to refresh,we need reset IRefreshFooter's state
-        if(mRefreshFooterView != null){
+        if (mRefreshFooterView != null) {
             mIsNoMoreData = false;
             mIsLoadingMore = false;
-            mRefreshFooterView.updateState(IRefreshFooter.FooterState.VIEW_STATE_COMPLETE,"");
+            mRefreshFooterView.updateState(IRefreshFooter.FooterState.VIEW_STATE_COMPLETE);
         }
     }
 
@@ -461,10 +545,10 @@ public class ExpandRecyclerView extends RecyclerView {
      * Update {@link IRefreshFooter.FooterState} to {@link IRefreshFooter.FooterState#VIEW_STATE_COMPLETE}
      * Load More action is done
      */
-    public void setLoadMoreComplete(){
+    public void setLoadMoreComplete() {
         mIsLoadingMore = false;
-        if(mRefreshFooterView != null){
-            mRefreshFooterView.updateState(IRefreshFooter.FooterState.VIEW_STATE_COMPLETE,"");
+        if (mRefreshFooterView != null) {
+            mRefreshFooterView.updateState(IRefreshFooter.FooterState.VIEW_STATE_COMPLETE);
         }
     }
 
@@ -472,11 +556,11 @@ public class ExpandRecyclerView extends RecyclerView {
      * Update {@link IRefreshFooter.FooterState} to {@link IRefreshFooter.FooterState#VIEW_STATE_NO_MORE}
      * Load More action is done,and no more date exits
      */
-    public void setLoadNoMore(){
+    public void setLoadNoMore() {
         mIsNoMoreData = true;
         mIsLoadingMore = false;
-        if(mRefreshFooterView != null){
-            mRefreshFooterView.updateState(IRefreshFooter.FooterState.VIEW_STATE_NO_MORE,"");
+        if (mRefreshFooterView != null) {
+            mRefreshFooterView.updateState(IRefreshFooter.FooterState.VIEW_STATE_NO_MORE);
         }
     }
 
@@ -509,7 +593,7 @@ public class ExpandRecyclerView extends RecyclerView {
      * @param onPullDeltaChangeListener OnPullDeltaChangeListener
      */
     public void addPullDeltaListener(OnPullDeltaChangeListener onPullDeltaChangeListener) {
-        if(mOnPullDeltaChangeListeners == null){
+        if (mOnPullDeltaChangeListeners == null) {
             mOnPullDeltaChangeListeners = new ArrayList<>();
         }
         mOnPullDeltaChangeListeners.add(onPullDeltaChangeListener);
@@ -518,7 +602,7 @@ public class ExpandRecyclerView extends RecyclerView {
     /**
      * Remove all listeners in {@link ExpandRecyclerView}
      */
-    public void removeAllListeners(){
+    public void removeAllListeners() {
         this.mOnRefreshListener = null;
         this.mOnPullDeltaChangeListeners.clear();
     }

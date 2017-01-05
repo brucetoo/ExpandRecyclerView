@@ -17,10 +17,6 @@ import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import java.util.Date;
-
-import static com.brucetoo.expandrecyclerview.IRefreshHeader.HeaderState.VIEW_STATE_NORMAL;
-
 /**
  * Created by Bruce Too
  * On 04/01/2017.
@@ -44,6 +40,14 @@ public class RefreshHeaderView extends LinearLayout implements IRefreshHeader {
 
     private HeaderState mCurrentState = HeaderState.VIEW_STATE_NORMAL;
     private int mMeasureHeight;
+    private long mLastUpdateTime = -1;
+
+    private String mPullToRefreshText = "Pull To Refresh";
+    private String mReleaseToRefreshText = "Release To Refresh";
+    private String mRefreshingText = "Refreshing";
+    private String mRefreshedSuccessText = "Refresh Success";
+    private String mRefreshedFailedText = "Refresh Failed";
+    private boolean mIsRefreshSuccess = true;
 
     public RefreshHeaderView(Context context) {
         super(context);
@@ -89,12 +93,22 @@ public class RefreshHeaderView extends LinearLayout implements IRefreshHeader {
         Log.e(TAG, "init -> mMeasureHeight:" + mMeasureHeight);
     }
 
-    public int getVisibleHeight() {
+    @Override
+    public int getRefreshHeaderHeight() {
         LayoutParams lp = (LayoutParams) mRootView.getLayoutParams();
         return lp.height;
     }
 
-    public void setVisibleHeight(int height) {
+    @Override
+    public void setStateDesc(String pullToRefresh, String releaseToRefresh, String refreshing, String refreshedSuccess,String refreshedFailed) {
+        this.mPullToRefreshText = pullToRefresh;
+        this.mReleaseToRefreshText = releaseToRefresh;
+        this.mRefreshingText = refreshing;
+        this.mRefreshedSuccessText = refreshedSuccess;
+        this.mRefreshedFailedText = refreshedFailed;
+    }
+
+    public void setRefreshHeaderHeight(int height) {
         LayoutParams lp = (LayoutParams) mRootView.getLayoutParams();
         lp.height = height;
         mRootView.setLayoutParams(lp);
@@ -123,6 +137,11 @@ public class RefreshHeaderView extends LinearLayout implements IRefreshHeader {
     }
 
     @Override
+    public void onRefreshState(boolean success) {
+        mIsRefreshSuccess = success;
+    }
+
+    @Override
     public HeaderState getCurrentState() {
         return mCurrentState;
     }
@@ -135,15 +154,15 @@ public class RefreshHeaderView extends LinearLayout implements IRefreshHeader {
     @Override
     public int onPullDown(float delta) {
 
-//        Log.e(TAG, "onPullDown: delta" + delta + " getVisibleHeight:" + getVisibleHeight());
-        if (getVisibleHeight() > 0 || delta > 0) {
-            int height = (int) delta + getVisibleHeight();
-            setVisibleHeight(height);
+//        Log.e(TAG, "onPullDown: delta" + delta + " getRefreshHeaderHeight:" + getRefreshHeaderHeight());
+        if (getRefreshHeaderHeight() > 0 || delta > 0) {
+            int height = (int) delta + getRefreshHeaderHeight();
+            setRefreshHeaderHeight(height);
             if (mCurrentState.ordinal() <= HeaderState.VIEW_STATE_RELEASE_REFRESH.ordinal()) {
-                if (getVisibleHeight() > mMeasureHeight) {
+                if (getRefreshHeaderHeight() > mMeasureHeight) {
                     updateState(HeaderState.VIEW_STATE_RELEASE_REFRESH);
                 } else {
-                    updateState(VIEW_STATE_NORMAL);
+                    updateState(HeaderState.VIEW_STATE_NORMAL);
                 }
             }
             return height;
@@ -155,10 +174,12 @@ public class RefreshHeaderView extends LinearLayout implements IRefreshHeader {
     @Override
     public void onNormal() {
         Log.e(TAG, "onNormal");
-        mTextPullRefresh.setText("Pull To Refresh");
+        mTextPullRefresh.setText(mPullToRefreshText);
         mArrowIcon.setVisibility(VISIBLE);
         mLayoutRefreshDown.setVisibility(GONE);
         mProgressRefreshing.setVisibility(GONE);
+
+        //VIEW_STATE_RELEASE_REFRESH -> VIEW_STATE_NORMAL
         if (mCurrentState == HeaderState.VIEW_STATE_RELEASE_REFRESH) {
             mArrowIcon.startAnimation(mRotateDownAnim);
         }
@@ -173,11 +194,12 @@ public class RefreshHeaderView extends LinearLayout implements IRefreshHeader {
         Log.e(TAG, "onReleaseRefresh");
         mLayoutRefreshDown.setVisibility(GONE);
         mProgressRefreshing.setVisibility(GONE);
+        //VIEW_STATE_NORMAL -> VIEW_STATE_RELEASE_REFRESH -> VIEW_STATE_REFRESHING
         if (mCurrentState != HeaderState.VIEW_STATE_REFRESHING) {
             mArrowIcon.setVisibility(VISIBLE);
             mArrowIcon.clearAnimation();
             mArrowIcon.startAnimation(mRotateUpAnim);
-            mTextPullRefresh.setText("Release To Refresh");
+            mTextPullRefresh.setText(mReleaseToRefreshText);
         }
     }
 
@@ -189,7 +211,7 @@ public class RefreshHeaderView extends LinearLayout implements IRefreshHeader {
         mArrowIcon.setVisibility(INVISIBLE);
         mLayoutRefreshDown.setVisibility(GONE);
         mProgressRefreshing.setVisibility(VISIBLE);
-        mTextPullRefresh.setText("Refreshing");
+        mTextPullRefresh.setText(mRefreshingText);
         smoothScrollTo(mMeasureHeight,0);
 
         //for test
@@ -206,10 +228,19 @@ public class RefreshHeaderView extends LinearLayout implements IRefreshHeader {
         Log.e(TAG, "onRefreshed");
 
         mArrowIcon.setVisibility(VISIBLE);
-        mLayoutRefreshDown.setVisibility(VISIBLE);
         mProgressRefreshing.setVisibility(GONE);
-        mTextPullRefresh.setText("Refresh Done");
-        mTextLastRefreshTime.setText(time2String(new Date()));
+        if(mIsRefreshSuccess) {
+            mTextPullRefresh.setText(mRefreshedSuccessText);
+        }else {
+            mTextPullRefresh.setText(mRefreshedFailedText);
+        }
+        if(mLastUpdateTime != -1) {
+            mLayoutRefreshDown.setVisibility(VISIBLE);
+            mTextLastRefreshTime.setText(makeTimeReadable(mLastUpdateTime));
+        }else {
+            mLastUpdateTime = System.currentTimeMillis();
+            mLayoutRefreshDown.setVisibility(GONE);
+        }
         smoothScrollTo(0,ANIM_REFRESH_DOWN_DELAY);
     }
 
@@ -217,7 +248,7 @@ public class RefreshHeaderView extends LinearLayout implements IRefreshHeader {
     public boolean onPullRelease() {
 
         boolean isRefreshing = false;
-        int height = getVisibleHeight();
+        int height = getRefreshHeaderHeight();
         Log.e(TAG, "onPullRelease: height:" + height);
         if (height > mMeasureHeight && mCurrentState.ordinal() < HeaderState.VIEW_STATE_REFRESHING.ordinal()) {
             updateState(HeaderState.VIEW_STATE_REFRESHING);
@@ -235,20 +266,20 @@ public class RefreshHeaderView extends LinearLayout implements IRefreshHeader {
     }
 
     private void resetState() {
-        mCurrentState = VIEW_STATE_NORMAL;
-        mTextPullRefresh.setText("Pull To Refresh");
+        mCurrentState = HeaderState.VIEW_STATE_NORMAL;
+        mTextPullRefresh.setText(mPullToRefreshText);
         mArrowIcon.setVisibility(VISIBLE);
         mLayoutRefreshDown.setVisibility(GONE);
         mProgressRefreshing.setVisibility(GONE);
     }
 
     private void smoothScrollTo(final int destHeight,long delay) {
-        ValueAnimator animator = ValueAnimator.ofInt(getVisibleHeight(), destHeight);
+        ValueAnimator animator = ValueAnimator.ofInt(getRefreshHeaderHeight(), destHeight);
         animator.setDuration(300);
         animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             @Override
             public void onAnimationUpdate(ValueAnimator animation) {
-                setVisibleHeight((int) animation.getAnimatedValue());
+                setRefreshHeaderHeight((int) animation.getAnimatedValue());
             }
         });
         animator.addListener(new AnimatorListenerAdapter() {
@@ -263,9 +294,9 @@ public class RefreshHeaderView extends LinearLayout implements IRefreshHeader {
         animator.start();
     }
 
-    public static String time2String(Date time) {
+    public static String makeTimeReadable(long time) {
         //获取time距离当前的秒数
-        int ct = (int)((System.currentTimeMillis() - time.getTime()) / 1000);
+        int ct = (int)((System.currentTimeMillis() - time) / 1000);
 
         if (ct == 0) {
             return "刚刚";

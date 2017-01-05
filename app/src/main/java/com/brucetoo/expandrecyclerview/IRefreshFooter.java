@@ -18,11 +18,13 @@ public interface IRefreshFooter {
 
     View getView();
 
-    void onLoading(String loading);
+    void onLoading();
 
     void onComplete();
 
-    void onNoMore(String noMore);
+    void onNoMore();
 
-    void updateState(FooterState state, String stateText);
+    void updateState(FooterState state);
+
+    void setStateDesc(String loadingDesc,String noMoreDesc);
 }

@@ -33,7 +33,11 @@ public interface IRefreshHeader {
 
     void updateState(HeaderState state);
 
+    void onRefreshState(boolean success);
+
     HeaderState getCurrentState();
 
-    int getVisibleHeight();
+    int getRefreshHeaderHeight();
+
+    void setStateDesc(String pullToRefresh,String releaseToRefresh,String refreshing,String refreshedSuccess,String refreshedFailed);
 }
