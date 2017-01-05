@@ -117,7 +117,7 @@ public class ExpandRecyclerView extends RecyclerView {
             return this;
         }
 
-        public void Build(ExpandRecyclerView recyclerView) {
+        public void build(ExpandRecyclerView recyclerView) {
 
             recyclerView.mCanPullDownRefresh = this.canPullDownRefresh;
             recyclerView.mCanPullUpRefresh = this.canPullUpRefresh;
@@ -279,7 +279,6 @@ public class ExpandRecyclerView extends RecyclerView {
         super.setAdapter(mAdapterWrapper);
         //Make sure the wrapper adapter can handle the same observer as adapter
         adapter.registerAdapterDataObserver(mAdapterDataObserver);
-//        mAdapterDataObserver.onChanged();
     }
 
     private RecyclerView.AdapterDataObserver mAdapterDataObserver = new AdapterDataObserver() {
@@ -350,15 +349,15 @@ public class ExpandRecyclerView extends RecyclerView {
             //TODO normal header may dynamic change the data
             //here we just handle the normal item.
 
-            adapter.onBindViewHolder(holder, position - (mHeaderViews.size() + 1));
+            adapter.onBindViewHolder(holder, position - (mHeaderViews.size() + getRefreshHeaderCount()));
         }
 
         @Override
         public int getItemCount() {
             if (mCanPullUpRefresh) {
-                return mHeaderViews.size() + adapter.getItemCount() + 1 + 1;
+                return mHeaderViews.size() + adapter.getItemCount() + 1 + getRefreshHeaderCount();
             } else {
-                return mHeaderViews.size() + adapter.getItemCount() + 1;
+                return mHeaderViews.size() + adapter.getItemCount() + getRefreshHeaderCount();
             }
         }
 
@@ -371,8 +370,7 @@ public class ExpandRecyclerView extends RecyclerView {
 
             //normal header
             if (isNormalHeader(position)) {
-                //plus 1 : exclude refresh header
-                return mHeaderTypes.get(position - 1);
+                return mHeaderTypes.get(position - getRefreshHeaderCount());
             }
 
             //footer view
@@ -469,11 +467,11 @@ public class ExpandRecyclerView extends RecyclerView {
         }
 
         private boolean isRefreshHeader(int position) {
-            return position == 0;
+            return position == 0 && mCanPullDownRefresh;
         }
 
         private boolean isNormalHeader(int position) {
-            return position >= 1 && position <= mHeaderViews.size();
+            return position >= getRefreshHeaderCount() && position < mHeaderViews.size() + getRefreshHeaderCount();
         }
 
         private boolean isFooter(int position) {
@@ -485,7 +483,7 @@ public class ExpandRecyclerView extends RecyclerView {
         }
 
         private int getRealItemPosition(int position) {
-            return position - (mHeaderViews.size() + 1);
+            return position - (mHeaderViews.size() + getRefreshHeaderCount());
         }
 
         private boolean checkItemViewTypeValid(int itemViewType) {
@@ -504,8 +502,20 @@ public class ExpandRecyclerView extends RecyclerView {
             return mHeaderViews.get(type);
         }
 
+        private int getRefreshHeaderCount() {
+            return mCanPullDownRefresh ? 1 : 0;
+        }
+
     }
 
+    /**
+     * Get header count,besides refresh header(if have)
+     * and normal headers
+     * @return header counts
+     */
+    public int getAllHeaderCount() {
+        return (mCanPullDownRefresh ? 1 : 0) + mHeaderViews.size();
+    }
 
     /**
      * Update {@link ExpandRecyclerView}'s state to complete({@link IRefreshHeader.HeaderState#VIEW_STATE_REFRESHED})

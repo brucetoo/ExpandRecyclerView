@@ -1,6 +1,8 @@
 package com.brucetoo.expandrecyclerview;
 
+import android.graphics.drawable.Drawable;
 import android.os.Handler;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
@@ -44,7 +46,7 @@ public class MainActivity extends AppCompatActivity {
 
         new ExpandRecyclerView.Builder()
             .setCanPullDownRefresh(true)
-            .setCanPullUpRefresh(false)
+            .setCanPullUpRefresh(true)
             .setPullToRefreshText("Pull To Refresh 1")
             .setReleaseToRefreshText("Release To Refresh 1")
             .setRefreshingText("Refreshing 1")
@@ -52,7 +54,7 @@ public class MainActivity extends AppCompatActivity {
             .setRefreshedFailedText("Refresh Failed 1")
             .setLoadMoreText("Loading...1")
             .setLoadNoMoreText("No More Data 1")
-            .Build(mRecyclerView);
+            .build(mRecyclerView);
 
         mRecyclerView.setRefreshListener(new ExpandRecyclerView.OnRefreshListener() {
 
@@ -102,6 +104,10 @@ public class MainActivity extends AppCompatActivity {
         }
 
         mAdapter = new RecyclerAdapter(mListDatas);
+
+        Drawable divider = ContextCompat.getDrawable(this, R.drawable.shape_divider);
+        mRecyclerView.addItemDecoration(new DividerItemDecoration(divider,mRecyclerView.getAllHeaderCount()));
+
         mRecyclerView.setAdapter(mAdapter);
         mRecyclerView.setRefreshing();
     }
