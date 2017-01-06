@@ -91,6 +91,7 @@ public class RefreshHeaderView extends LinearLayout implements IRefreshHeader {
         measure(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         mMeasureHeight = getMeasuredHeight();
         Log.e(TAG, "init -> mMeasureHeight:" + mMeasureHeight);
+        setRefreshHeaderHeight(0);
     }
 
     @Override
