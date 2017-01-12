@@ -1,4 +1,4 @@
-package com.brucetoo.expandrecyclerview;
+package com.brucetoo.expandrecyclerview.reyclerview;
 
 import android.content.Context;
 import android.util.AttributeSet;
@@ -9,7 +9,9 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import static com.brucetoo.expandrecyclerview.IRefreshFooter.FooterState.VIEW_STATE_LOADING;
+import com.brucetoo.expandrecyclerview.R;
+
+import static com.brucetoo.expandrecyclerview.reyclerview.IRefreshFooter.FooterState.VIEW_STATE_LOADING;
 
 /**
  * Created by Bruce Too

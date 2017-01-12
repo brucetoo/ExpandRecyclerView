@@ -1,4 +1,4 @@
-package com.brucetoo.expandrecyclerview;
+package com.brucetoo.expandrecyclerview.reyclerview;
 
 import android.app.Activity;
 import android.content.Context;
@@ -12,6 +12,8 @@ import android.view.animation.RotateAnimation;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+
+import com.brucetoo.expandrecyclerview.R;
 
 /**
  * Created by Bruce Too

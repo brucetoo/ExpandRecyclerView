@@ -1,4 +1,4 @@
-package com.brucetoo.expandrecyclerview;
+package com.brucetoo.expandrecyclerview.reyclerview;
 
 import android.graphics.Canvas;
 import android.graphics.Rect;

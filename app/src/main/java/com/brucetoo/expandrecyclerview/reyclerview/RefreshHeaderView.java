@@ -1,4 +1,4 @@
-package com.brucetoo.expandrecyclerview;
+package com.brucetoo.expandrecyclerview.reyclerview;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
@@ -16,6 +16,8 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+
+import com.brucetoo.expandrecyclerview.R;
 
 /**
  * Created by Bruce Too
