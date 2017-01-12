@@ -258,7 +258,7 @@ public class ViewAnimator {
 
             @Override
             public void onAnimationEnd(Animator animation) {
-                if (mEndListener != null) mEndListener.onStop();
+                if (mEndListener != null) mEndListener.onEnd();
                 if (mNextViewAnimator != null) {
                     mNextViewAnimator.mPreviousViewAnimator = null;
                     mNextViewAnimator.start();

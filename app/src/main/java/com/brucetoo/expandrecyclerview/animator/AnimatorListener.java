@@ -17,10 +17,10 @@ public class AnimatorListener {
     }
 
     interface End {
-        void onStop();
+        void onEnd();
     }
 
     interface Update<V extends View>{
-        void update(V view, float value);
+        void onUpdate(V view, float value);
     }
 }

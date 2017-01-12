@@ -260,7 +260,7 @@ public class AnimatorBuilder {
     /**
      * Custom animator builder.
      *
-     * @param update the update
+     * @param update the onUpdate
      * @param values the values
      * @return the animator builder
      */
@@ -272,7 +272,7 @@ public class AnimatorBuilder {
                     @Override
                     public void onAnimationUpdate(ValueAnimator animation) {
                         //noinspection unchecked
-                        update.update(view, (Float) animation.getAnimatedValue());
+                        update.onUpdate(view, (Float) animation.getAnimatedValue());
                     }
                 });
             add(valueAnimator);
@@ -289,7 +289,7 @@ public class AnimatorBuilder {
     public AnimatorBuilder height(float... height) {
         return custom(new AnimatorListener.Update() {
             @Override
-            public void update(View view, float value) {
+            public void onUpdate(View view, float value) {
                 view.getLayoutParams().height = (int) value;
                 view.requestLayout();
             }
@@ -305,7 +305,7 @@ public class AnimatorBuilder {
     public AnimatorBuilder width(float... width) {
         return custom(new AnimatorListener.Update() {
             @Override
-            public void update(View view, float value) {
+            public void onUpdate(View view, float value) {
                 view.getLayoutParams().width = (int) value;
                 view.requestLayout();
             }
