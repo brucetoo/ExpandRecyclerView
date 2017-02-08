@@ -28,7 +28,6 @@ public class AnimatorBuilder {
     private final List<Animator> mAnimatorList = new ArrayList<>();
     private boolean mWaitForSize;
     private boolean mNextValueWillBeDp = false;
-    private Interpolator mSingleInterpolator = null;//interpolator for a single ViewAnimator
 
     /**
      * Init a new Animation builder with changeable views
@@ -426,15 +425,6 @@ public class AnimatorBuilder {
     public AnimatorBuilder interpolator(Interpolator interpolator) {
         mViewAnimator.interpolator(interpolator);
         return this;
-    }
-
-    public AnimatorBuilder setSingleInterpolator(Interpolator interpolator) {
-        mSingleInterpolator = interpolator;
-        return this;
-    }
-
-    public Interpolator getSingleInterpolator() {
-        return mSingleInterpolator;
     }
 
     /**

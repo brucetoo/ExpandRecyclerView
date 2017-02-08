@@ -12,15 +12,15 @@ public class AnimatorListener {
 
     private AnimatorListener(){}
 
-    interface Start{
+    public interface Start{
         void onStart();
     }
 
-    interface End {
+    public interface End {
         void onEnd();
     }
 
-    interface Update<V extends View>{
+    public interface Update<V extends View>{
         void onUpdate(V view, float value);
     }
 }

@@ -1,10 +1,12 @@
 package com.brucetoo.expandrecyclerview.animator;
 
 import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
 import android.animation.ValueAnimator;
 import android.support.annotation.IntDef;
 import android.support.annotation.IntRange;
+import android.support.annotation.NonNull;
 import android.support.v4.view.ViewCompat;
 import android.view.View;
 import android.view.ViewTreeObserver;
@@ -44,7 +46,8 @@ public class ViewAnimator {
 
     private View[] mViews;
 
-    public ViewAnimator() {}
+    public ViewAnimator() {
+    }
 
     public ViewAnimator(View... view) {
         this.mViews = view;
@@ -181,6 +184,7 @@ public class ViewAnimator {
 
     /**
      * Execute animator in views be add by {@link #putOn(View...)}
+     *
      * @return AnimatorBuilder
      */
     public AnimatorBuilder animate() {
@@ -190,15 +194,16 @@ public class ViewAnimator {
 
     /**
      * Execute animator in views by given now
+     *
      * @param views views by animated
      * @return AnimatorBuilder
      */
-    public static AnimatorBuilder animate(View... views) {
+    public static AnimatorBuilder animate(@NonNull View... views) {
         ViewAnimator viewAnimator = new ViewAnimator();
         return viewAnimator.addAnimatorBuilder(views);
     }
 
-    public AnimatorBuilder thenAnimate(View... views) {
+    public AnimatorBuilder thenAnimate(@NonNull View... views) {
         ViewAnimator nextViewAnimator = new ViewAnimator();
         this.mNextViewAnimator = nextViewAnimator;
         nextViewAnimator.mPreviousViewAnimator = this;
@@ -217,11 +222,6 @@ public class ViewAnimator {
         //add all pending property animators
         for (AnimatorBuilder animatorBuilder : mAnimatorBuilderList) {
             List<Animator> animatorList = animatorBuilder.getPendingAnimators();
-            if (animatorBuilder.getSingleInterpolator() != null) {
-                for (Animator animator : animatorList) {
-                    animator.setInterpolator(animatorBuilder.getSingleInterpolator());
-                }
-            }
             animators.addAll(animatorList);
         }
 
@@ -250,7 +250,7 @@ public class ViewAnimator {
         if (mAnimatorInterpolator != null)
             animatorSet.setInterpolator(mAnimatorInterpolator);
 
-        animatorSet.addListener(new Animator.AnimatorListener() {
+        animatorSet.addListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationStart(Animator animation) {
                 if (mStartListener != null) mStartListener.onStart();
@@ -263,16 +263,6 @@ public class ViewAnimator {
                     mNextViewAnimator.mPreviousViewAnimator = null;
                     mNextViewAnimator.start();
                 }
-            }
-
-            @Override
-            public void onAnimationCancel(Animator animation) {
-
-            }
-
-            @Override
-            public void onAnimationRepeat(Animator animation) {
-
             }
         });
 
