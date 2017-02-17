@@ -2,8 +2,11 @@ package com.brucetoo.expandrecyclerview;
 
 import android.annotation.TargetApi;
 import android.content.Context;
+import android.content.res.TypedArray;
 import android.os.Build;
+import android.support.annotation.IdRes;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.VelocityTracker;
 import android.view.View;
@@ -26,11 +29,13 @@ public class ScrollableLayout extends LinearLayout {
     private float mDownY;
     private float mLastY;
 
-    private int mMinScrollY = 0;
-    private int mMaxScrollY = 0;
+    private int mMinHeight = 0;
+    private int mMaxHeight = 0;
+    private int mMaxScrollY;
+    @IdRes
+    private int mHeaderResId;
     private int mCurrentY;
 
-    private int mHeadHeight;
     private int mTouchSlop;
     private int mMinimumVelocity;
     private int mMaximumVelocity;
@@ -38,26 +43,15 @@ public class ScrollableLayout extends LinearLayout {
     private int mLastScrollerY;
     private boolean isClickHead;
 
-    private View mHeadView;
+    private View mHeaderView;
 
     private Scroller mScroller;
     private VelocityTracker mVelocityTracker;
+    private OnScrollListener onScrollListener;
 
     enum DIRECTION {
         UP,
         DOWN
-    }
-
-    public interface OnScrollListener {
-
-        void onScroll(int currentY, int maxY);
-
-    }
-
-    private OnScrollListener onScrollListener;
-
-    public void setOnScrollListener(OnScrollListener onScrollListener) {
-        this.onScrollListener = onScrollListener;
     }
 
     private ScrollableHelper mHelper;
@@ -67,34 +61,38 @@ public class ScrollableLayout extends LinearLayout {
     }
 
     public ScrollableLayout(Context context) {
-        super(context);
-        init(context);
+        this(context, null);
     }
 
     public ScrollableLayout(Context context, AttributeSet attrs) {
-        super(context, attrs);
-        init(context);
+        this(context, attrs, 0);
     }
 
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public ScrollableLayout(Context context, AttributeSet attrs, int defStyleAttr) {
-        super(context, attrs, defStyleAttr);
-        init(context);
+        this(context, attrs, defStyleAttr, 0);
     }
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     public ScrollableLayout(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
-        init(context);
-    }
 
-    private void init(Context context) {
         mHelper = new ScrollableHelper();
         mScroller = new Scroller(context);
         final ViewConfiguration configuration = ViewConfiguration.get(context);
         mTouchSlop = configuration.getScaledTouchSlop();
         mMinimumVelocity = configuration.getScaledMinimumFlingVelocity();
         mMaximumVelocity = configuration.getScaledMaximumFlingVelocity();
+
+        TypedArray array = context.obtainStyledAttributes(attrs, R.styleable.ScrollableLayout);
+        if (array != null) {
+            mMinHeight = array.getDimensionPixelSize(R.styleable.ScrollableLayout_headerMinHeight, 0);
+            mMaxHeight = array.getDimensionPixelSize(R.styleable.ScrollableLayout_headerMaxHeight, 0);
+            mHeaderResId = array.getResourceId(R.styleable.ScrollableLayout_headerView, -1);
+            array.recycle();
+        }
+
+        mMaxScrollY = mMaxHeight - mMinHeight;
     }
 
     @Override
@@ -109,7 +107,7 @@ public class ScrollableLayout extends LinearLayout {
                 mDownX = currentX;
                 mDownY = currentY;
                 mLastY = currentY;
-                checkIsClickHead((int) currentY, mHeadHeight, getScrollY());
+                checkIsClickHead((int) currentY, mMaxScrollY, getScrollY());
                 initOrResetVelocityTracker();
                 mVelocityTracker.addMovement(ev);
                 mScroller.forceFinished(true);
@@ -120,6 +118,7 @@ public class ScrollableLayout extends LinearLayout {
                 deltaY = mLastY - currentY;
 
                 if (shiftY > mTouchSlop && (!isHeaderStickied() || mHelper.isTop())) {
+                    Log.d(TAG, "ACTION_MOVE mCurrentY:" + mCurrentY + " mMaxScrollY:" + mMaxScrollY);
                     scrollBy(0, (int) (deltaY + 0.5));
                 }
                 mLastY = currentY;
@@ -131,7 +130,8 @@ public class ScrollableLayout extends LinearLayout {
                     boolean disallowChild = false;
                     if (Math.abs(yVelocity) > mMinimumVelocity) {
                         mDirection = yVelocity > 0 ? DIRECTION.UP : DIRECTION.DOWN;
-                        if ((mDirection == DIRECTION.UP && isHeaderStickied()) || (!isHeaderStickied() && getScrollY() == 0 && mDirection == DIRECTION.DOWN)) {
+                        Log.i(TAG, "dispatchTouchEvent mDirection:" + mDirection + " isHeaderStickied:" + isHeaderStickied() + " getScrollY():" + getScrollY());
+                        if ((mDirection == DIRECTION.UP && isHeaderStickied()) || (!isHeaderStickied() && getScrollY() == mMinHeight && mDirection == DIRECTION.DOWN)) {
                             disallowChild = true;
                         } else {
                             mScroller.fling(0, getScrollY(), 0, (int) yVelocity, 0, 0, -Integer.MAX_VALUE, Integer.MAX_VALUE);
@@ -171,12 +171,13 @@ public class ScrollableLayout extends LinearLayout {
     public void computeScroll() {
         if (mScroller.computeScrollOffset()) {
             final int currY = mScroller.getCurrY();
+            Log.e(TAG, "computeScroll currY:" + currY + " mDirection:" + mDirection + " isHeaderStickied():" + isHeaderStickied());
             if (mDirection == DIRECTION.UP) {
                 if (isHeaderStickied()) {
                     int distance = mScroller.getFinalY() - currY;
                     int duration = calcDuration(mScroller.getDuration(), mScroller.timePassed());
                     mHelper.smoothScrollBy(getScrollerVelocity(distance, duration), distance, duration);
-                    //can call computeScrollOffset again
+                    //can't call computeScrollOffset again
                     mScroller.forceFinished(true);
                     return;
                 } else {
@@ -187,7 +188,7 @@ public class ScrollableLayout extends LinearLayout {
                     int deltaY = (currY - mLastScrollerY);
                     int toY = getScrollY() + deltaY;
                     scrollTo(0, toY);
-                    if (mCurrentY <= mMinScrollY) {
+                    if (mCurrentY <= mMinHeight) {
                         mScroller.forceFinished(true);
                         return;
                     }
@@ -204,8 +205,8 @@ public class ScrollableLayout extends LinearLayout {
         int toY = scrollY + y;
         if (toY >= mMaxScrollY) {
             toY = mMaxScrollY;
-        } else if (toY <= mMinScrollY) {
-            toY = mMinScrollY;
+        } else if (toY <= 0) {
+            toY = 0;
         }
         y = toY - scrollY;
         super.scrollBy(x, y);
@@ -215,8 +216,8 @@ public class ScrollableLayout extends LinearLayout {
     public void scrollTo(int x, int y) {
         if (y >= mMaxScrollY) {
             y = mMaxScrollY;
-        } else if (y <= mMinScrollY) {
-            y = mMinScrollY;
+        } else if (y <= 0) {
+            y = 0;
         }
         mCurrentY = y;
         if (onScrollListener != null) {
@@ -250,25 +251,37 @@ public class ScrollableLayout extends LinearLayout {
         isClickHead = downY + scrollY <= headHeight;
     }
 
-    private int calcDuration(int duration, int timepass) {
-        return duration - timepass;
+    private int calcDuration(int duration, int timePass) {
+        return duration - timePass;
     }
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        mHeadView = getChildAt(0);
-        measureChildWithMargins(mHeadView, widthMeasureSpec, 0, MeasureSpec.UNSPECIFIED, 0);
-        mMaxScrollY = mHeadHeight = mHeadView.getMeasuredHeight();
-        //height = heightMeasureSpec + mHeadHeight
-        super.onMeasure(widthMeasureSpec, MeasureSpec.makeMeasureSpec(MeasureSpec.getSize(heightMeasureSpec) + mHeadHeight, MeasureSpec.EXACTLY));
+        super.onMeasure(widthMeasureSpec, MeasureSpec.makeMeasureSpec(MeasureSpec.getSize(heightMeasureSpec) + mMaxScrollY, MeasureSpec.EXACTLY));
     }
 
     @Override
     protected void onFinishInflate() {
-        if (mHeadView != null && !mHeadView.isClickable()) {
-            mHeadView.setClickable(true);
-        }
         super.onFinishInflate();
+        if (mHeaderResId != -1) {
+            mHeaderView = findViewById(mHeaderResId);
+        } else {
+            throw new IllegalArgumentException("You must specify headerId in xml");
+        }
+        if (mHeaderView != null && !mHeaderView.isClickable()) {
+            mHeaderView.setClickable(true);
+        }
+
+        /**
+         * handle item view move in here
+         * position change:
+         * titleView -> spaceTitleView
+         * btnView -> spaceBtnView
+         *
+         * alpha change:
+         * iconView,descView,backView
+         * and so on...
+         */
     }
 
     @Override
@@ -278,7 +291,7 @@ public class ScrollableLayout extends LinearLayout {
     }
 
     public void setScrollView(final ViewGroup scrollView) {
-        mHelper.setCurrentScrollableContainer(new ScrollableHelper.ScrollableContainer() {
+        mHelper.setScrollableView(new ScrollableHelper.ScrollableContainer() {
             @Override
             public View getScrollableView() {
                 return scrollView;
@@ -294,11 +307,13 @@ public class ScrollableLayout extends LinearLayout {
         return mMaxScrollY;
     }
 
-    public boolean isHeadOnTop() {
-        return mCurrentY == mMinScrollY;
+    public void setOnScrollListener(OnScrollListener onScrollListener) {
+        this.onScrollListener = onScrollListener;
     }
 
-    public boolean isScrollViewOnTop() {
-        return mCurrentY == mMinScrollY && mHelper.isTop();
+    public interface OnScrollListener {
+
+        void onScroll(int currentY, int maxScrollY);
+
     }
 }

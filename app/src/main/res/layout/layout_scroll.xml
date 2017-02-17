@@ -1,20 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout
+<com.brucetoo.expandrecyclerview.ScrollableLayout
+    android:id="@+id/scroll_layout"
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    app:headerMaxHeight="120dp"
+    app:headerMinHeight="50dp"
+    app:headerView="@+id/layout_header">
 
-    <com.brucetoo.expandrecyclerview.ScrollableLayout
-        android:id="@+id/scroll_layout"
+    <FrameLayout
+        android:id="@+id/layout_header"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:layout_height="120dp"
+        android:background="@android:color/darker_gray">
 
         <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="120dp"
-            android:background="@android:color/darker_gray"
-            android:paddingTop="50dp">
+            android:layout_height="wrap_content"
+            android:layout_marginTop="50dp">
 
             <View
                 android:id="@+id/img_icon"
@@ -39,10 +44,10 @@
                 android:id="@+id/txt_desc"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="@android:color/black"
-                android:text="DESCRIPTION"
                 android:layout_below="@+id/txt_title"
                 android:layout_toRightOf="@+id/img_icon"
+                android:text="DESCRIPTION"
+                android:textColor="@android:color/black"
                 />
 
             <Button
@@ -59,58 +64,44 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
-            <ListView
-                android:id="@+id/list_view"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"/>
+            <View
+                android:id="@+id/img_back"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_marginLeft="10dp"
+                android:layout_marginTop="10dp"
+                android:background="@mipmap/ic_launcher"
+                />
+
+            <Space
+                android:id="@+id/space_title"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_alignBottom="@+id/img_back"
+                android:layout_marginLeft="10dp"
+                android:layout_toRightOf="@+id/img_back"
+                />
+
+            <Space
+                android:id="@+id/space_btn"
+                android:layout_width="60dp"
+                android:layout_height="40dp"
+                android:layout_alignBottom="@+id/img_back"
+                android:layout_alignParentRight="true"
+                android:layout_marginRight="15dp"/>
+
         </RelativeLayout>
 
-    </com.brucetoo.expandrecyclerview.ScrollableLayout>
+    </FrameLayout>
 
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="50dp">
+        android:layout_height="match_parent">
 
-        <View
-            android:id="@+id/layout_top_bg"
+        <ListView
+            android:id="@+id/list_view"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="@android:color/darker_gray"
-            android:visibility="invisible"
-            />
-
-        <View
-            android:id="@+id/img_back"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
-            android:layout_marginLeft="10dp"
-            android:layout_marginTop="10dp"
-            android:background="@mipmap/ic_launcher"
-            />
-
-        <TextView
-            android:id="@+id/txt_title_top"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerVertical="true"
-            android:layout_marginLeft="20dp"
-            android:layout_toRightOf="@+id/img_back"
-            android:text="TITLE"
-            android:textColor="@android:color/black"
-            android:visibility="invisible"
-            />
-
-        <Button
-            android:id="@+id/btn_click_top"
-            android:layout_width="60dp"
-            android:layout_height="40dp"
-            android:layout_alignParentRight="true"
-            android:layout_centerVertical="true"
-            android:layout_marginRight="20dp"
-            android:visibility="invisible"
-            android:textSize="9sp"
-            android:text="BUTTON"/>
-
+            android:layout_height="match_parent"/>
     </RelativeLayout>
 
-</FrameLayout>
+</com.brucetoo.expandrecyclerview.ScrollableLayout>

@@ -18,34 +18,26 @@ import android.widget.ScrollView;
 
 public class ScrollableHelper<T extends View> {
 
-    private ScrollableContainer mCurrentScrollableCainer;
+    private ScrollableContainer mScrollableContainer;
 
     public interface ScrollableContainer<T extends View> {
         T getScrollableView();
     }
 
-    public void setCurrentScrollableContainer(ScrollableContainer scrollableContainer) {
-        this.mCurrentScrollableCainer = scrollableContainer;
+    public void setScrollableView(ScrollableContainer scrollableContainer) {
+        this.mScrollableContainer = scrollableContainer;
     }
 
     public T getScrollableView() {
-        if (mCurrentScrollableCainer == null) {
+        if (mScrollableContainer == null) {
             return null;
         }
-        return (T) mCurrentScrollableCainer.getScrollableView();
+        return (T) mScrollableContainer.getScrollableView();
     }
 
-    /**
-     * 判断是否滑动到顶部方法,ScrollAbleLayout根据此方法来做一些逻辑判断
-     * 目前只实现了AdapterView,ScrollView,RecyclerView
-     * 需要支持其他view可以自行补充实现
-     *
-     * @return
-     */
     public boolean isTop() {
         T scrollableView = getScrollableView();
         if (scrollableView == null) {
-//            throw new NullPointerException("You should call ScrollableHelper.setCurrentScrollableContainer() to set ScrollableContainer.");
             return true;
         }
         if (scrollableView instanceof AdapterView) {
