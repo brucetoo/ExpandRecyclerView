@@ -6,20 +6,25 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    app:headerMaxHeight="120dp"
+    app:headerMaxHeight="160dp"
     app:headerMinHeight="50dp"
     app:headerView="@+id/layout_header">
 
     <FrameLayout
         android:id="@+id/layout_header"
         android:layout_width="match_parent"
-        android:layout_height="120dp"
-        android:background="@android:color/darker_gray">
+        android:layout_height="160dp">
+
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@mipmap/img_bg"
+            />
 
         <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="50dp">
+            android:layout_height="match_parent"
+            android:layout_marginTop="80dp">
 
             <View
                 android:id="@+id/img_icon"

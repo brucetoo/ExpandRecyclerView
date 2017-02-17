@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.AbsListView;
 import android.widget.ArrayAdapter;
@@ -63,8 +64,10 @@ public class ScrollActivity extends AppCompatActivity implements AbsListView.OnS
             list.add("String " + (i + 1));
         }
 
+        mListView.addHeaderView(LayoutInflater.from(this).inflate(R.layout.list_header,null));
         mListView.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_expandable_list_item_1, list));
         mListView.setOnScrollListener(this);
+
 
         mScrollLayout.setScrollView(mListView);
         mScrollLayout.setOnScrollListener(new ScrollableLayout.OnScrollListener() {

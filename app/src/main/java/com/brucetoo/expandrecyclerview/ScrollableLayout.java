@@ -25,6 +25,8 @@ public class ScrollableLayout extends LinearLayout {
 
     private static final String TAG = "ScrollableLayout";
 
+    private static final long FLING_DELAY_DURATION = 1;
+    private static final int FLING_STEP_DP = 5;
     private float mDownX;
     private float mDownY;
     private float mLastY;
@@ -53,6 +55,19 @@ public class ScrollableLayout extends LinearLayout {
         UP,
         DOWN
     }
+
+    private boolean mMoveUp;
+    private Runnable mFling = new Runnable() {
+        @Override
+        public void run() {
+            scrollBy(0, dp2sp(mMoveUp ? FLING_STEP_DP : -FLING_STEP_DP));
+            if(getScrollY() == mMaxScrollY || getScrollY() == 0){
+                removeCallbacks(this);
+            }else {
+                postDelayed(this, FLING_DELAY_DURATION);
+            }
+        }
+    };
 
     private ScrollableHelper mHelper;
 
@@ -140,6 +155,17 @@ public class ScrollableLayout extends LinearLayout {
                             invalidate();
                         }
                     }
+                    Log.e(TAG, "ACTION_UP: getScrollY() -> " + getScrollY());
+                    if(getScrollY() > mMaxScrollY / 2){
+                        //scroll up
+                        mMoveUp = true;
+                    }else {
+                        //scroll down
+                        mMoveUp = false;
+                    }
+                    removeCallbacks(mFling);
+                    postDelayed(mFling,FLING_DELAY_DURATION);
+
                     if (!disallowChild && (isClickHead || !isHeaderStickied())) {
                         int action = ev.getAction();
                         ev.setAction(MotionEvent.ACTION_CANCEL);
@@ -288,6 +314,10 @@ public class ScrollableLayout extends LinearLayout {
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
         recycleVelocityTracker();
+    }
+
+    private int dp2sp(int dp){
+        return (int) (dp * getResources().getDisplayMetrics().density);
     }
 
     public void setScrollView(final ViewGroup scrollView) {
