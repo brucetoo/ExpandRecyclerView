@@ -31,4 +31,10 @@ public class MainActivity extends AppCompatActivity{
         intent.setClass(this,ViewAnimatorActivity.class);
         startActivity(intent);
     }
+
+    public void onClickThree(View view){
+        Intent intent = new Intent();
+        intent.setClass(this,ScrollActivity.class);
+        startActivity(intent);
+    }
 }
