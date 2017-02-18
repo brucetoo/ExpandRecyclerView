@@ -34,6 +34,7 @@ public class ScrollActivity extends AppCompatActivity implements AbsListView.OnS
     private View mSpaceBtn;
     private View mBack;
     private View mDesc;
+    private View mBg;
     private int[] titleDelta = new int[2];
     private int[] btnDelta = new int[2];
 
@@ -58,6 +59,7 @@ public class ScrollActivity extends AppCompatActivity implements AbsListView.OnS
         mSpaceBtn = findViewById(R.id.space_btn);
         mBack = findViewById(R.id.img_back);
         mDesc = findViewById(R.id.txt_desc);
+        mBg = findViewById(R.id.img_bg);
 
         List<String> list = new ArrayList<>();
         for (int i = 0; i < 20; i++) {
@@ -70,7 +72,7 @@ public class ScrollActivity extends AppCompatActivity implements AbsListView.OnS
 
 
         mScrollLayout.setScrollView(mListView);
-        mScrollLayout.setOnScrollListener(new ScrollableLayout.OnScrollListener() {
+        mScrollLayout.setmOnScrollListener(new ScrollableLayout.OnScrollListener() {
             @Override
             public void onScroll(int currentY, int maxScrollY) {
                 float percent = 1 - currentY * 1.0f / maxScrollY;
@@ -78,6 +80,7 @@ public class ScrollActivity extends AppCompatActivity implements AbsListView.OnS
                 ViewAnimator.putOn(mIcon).alpha(percent)
                     .andPutOn(mDesc).alpha(percent)
                     .andPutOn(mTitle).translationX(-titleDelta[0] * (1 - Math.max(0, percent)))
+                    .scale(percent < 0.75f ? 0.75f : percent)
                     .andPutOn(mBack).translationY(currentY);
 
                 //if the locationY reach the top end Y,we need adjust the translationY in opposite direction
@@ -91,7 +94,8 @@ public class ScrollActivity extends AppCompatActivity implements AbsListView.OnS
                     ViewAnimator.putOn(mTitle).translationY(0);
                 }
                 //textSize 25 -> 25*0.5f , textSize scale percent
-                mTitle.setTextSize(25 * (percent < 0.5f ? 0.5f : percent));
+//                mTitle.setTextSize(25 * (percent < 0.5f ? 0.5f : percent));
+
 
 
                 //if the locationY reach the top end Y,we need adjust the translationY in opposite direction
@@ -111,6 +115,12 @@ public class ScrollActivity extends AppCompatActivity implements AbsListView.OnS
 
                 Log.e("ScrollActivity", "onScroll: currentY -> " + currentY + " titleDelta_x -> " + titleDelta[0]
                     + " titleDelta_y -> " + titleDelta[1] + " percent -> " + percent + " maxScrollY -> " + maxScrollY);
+            }
+
+            @Override
+            public void onScrollExpand(View headerView,float percent) {
+//                headerView.getLayoutParams().height = (int) (headerView.getLayoutParams().height * percent);
+//                headerView.requestLayout();
             }
         });
 

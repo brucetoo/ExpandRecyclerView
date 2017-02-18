@@ -34,8 +34,11 @@ public class ScrollableLayout extends LinearLayout {
     private int mMinHeight = 0;
     private int mMaxHeight = 0;
     private int mMaxScrollY;
+    private int mOverScrollY = 0;
     @IdRes
     private int mHeaderResId;
+    @IdRes
+    private int mImageBgResId;
     private int mCurrentY;
 
     private int mTouchSlop;
@@ -46,10 +49,14 @@ public class ScrollableLayout extends LinearLayout {
     private boolean isClickHead;
 
     private View mHeaderView;
+    private View mHeaderBg;
+    private boolean mHeaderImageParallax;
+    private float mHeaderParallaxRatio;
 
     private Scroller mScroller;
     private VelocityTracker mVelocityTracker;
-    private OnScrollListener onScrollListener;
+    private OnScrollListener mOnScrollListener;
+    private boolean mAlreadyScaleHeader;
 
     enum DIRECTION {
         UP,
@@ -61,9 +68,25 @@ public class ScrollableLayout extends LinearLayout {
         @Override
         public void run() {
             scrollBy(0, dp2sp(mMoveUp ? FLING_STEP_DP : -FLING_STEP_DP));
-            if(getScrollY() == mMaxScrollY || getScrollY() == 0){
+            if (getScrollY() == mMaxScrollY || getScrollY() == 0) {
                 removeCallbacks(this);
-            }else {
+            } else {
+                postDelayed(this, FLING_DELAY_DURATION);
+            }
+        }
+    };
+
+    private Runnable mReboundBack = new Runnable() {
+        @Override
+        public void run() {
+
+            mHeaderView.getLayoutParams().height = Math.max(mHeaderView.getLayoutParams().height - dp2sp(FLING_STEP_DP * 3), mMaxHeight);
+            float scale = mHeaderView.getLayoutParams().height * 1.0f / mMaxHeight;
+            mHeaderBg.setScaleX(scale);
+            requestLayout();
+            if (mHeaderView.getLayoutParams().height == mMaxHeight) {
+                removeCallbacks(this);
+            } else {
                 postDelayed(this, FLING_DELAY_DURATION);
             }
         }
@@ -103,7 +126,10 @@ public class ScrollableLayout extends LinearLayout {
         if (array != null) {
             mMinHeight = array.getDimensionPixelSize(R.styleable.ScrollableLayout_headerMinHeight, 0);
             mMaxHeight = array.getDimensionPixelSize(R.styleable.ScrollableLayout_headerMaxHeight, 0);
-            mHeaderResId = array.getResourceId(R.styleable.ScrollableLayout_headerView, -1);
+            mHeaderResId = array.getResourceId(R.styleable.ScrollableLayout_headerViewId, -1);
+            mImageBgResId = array.getResourceId(R.styleable.ScrollableLayout_headerImageViewId, -1);
+            mHeaderImageParallax = array.getBoolean(R.styleable.ScrollableLayout_headerImageParallax, false);
+            mHeaderParallaxRatio = array.getFloat(R.styleable.ScrollableLayout_headerParallaxRatio, 2.0f);
             array.recycle();
         }
 
@@ -128,18 +154,35 @@ public class ScrollableLayout extends LinearLayout {
                 mScroller.forceFinished(true);
                 break;
             case MotionEvent.ACTION_MOVE:
-                initVelocityTrackerIfNotExists();
-                mVelocityTracker.addMovement(ev);
-                deltaY = mLastY - currentY;
 
-                if (shiftY > mTouchSlop && (!isHeaderStickied() || mHelper.isTop())) {
-                    Log.d(TAG, "ACTION_MOVE mCurrentY:" + mCurrentY + " mMaxScrollY:" + mMaxScrollY);
-                    scrollBy(0, (int) (deltaY + 0.5));
+                if (mHeaderView.getLayoutParams().height == mMaxHeight) {
+                    mAlreadyScaleHeader = false;
+                } else {
+                    mAlreadyScaleHeader = true;
+                }
+
+                deltaY = mLastY - currentY;
+                if (!mAlreadyScaleHeader) {
+                    initVelocityTrackerIfNotExists();
+                    mVelocityTracker.addMovement(ev);
+
+                    if (shiftY > mTouchSlop && (!isHeaderStickied() || mHelper.isTop())) {
+                        Log.d(TAG, "ACTION_MOVE mCurrentY:" + mCurrentY + " mMaxScrollY:" + mMaxScrollY + " deltaY:" + deltaY);
+                        scrollBy(0, (int) (deltaY + 0.5));
+                    }
+
+                    if (mHelper.isTop() && shiftY > mTouchSlop && !isHeaderStickied() && getScrollY() == 0 && mHeaderImageParallax) {//over scroll
+                        parallaxImage(deltaY);
+                    }
+                } else {
+                    if (shiftY > mTouchSlop && !isHeaderStickied()) {//over scroll
+                        parallaxImage(deltaY);
+                    }
                 }
                 mLastY = currentY;
                 break;
             case MotionEvent.ACTION_UP:
-                if (shiftY > mTouchSlop) {
+                if (shiftY > mTouchSlop && !mAlreadyScaleHeader) {
                     mVelocityTracker.computeCurrentVelocity(1000, mMaximumVelocity);
                     float yVelocity = -mVelocityTracker.getYVelocity();
                     boolean disallowChild = false;
@@ -156,15 +199,15 @@ public class ScrollableLayout extends LinearLayout {
                         }
                     }
                     Log.e(TAG, "ACTION_UP: getScrollY() -> " + getScrollY());
-                    if(getScrollY() > mMaxScrollY / 2){
+                    if (getScrollY() > mMaxScrollY / 2) {
                         //scroll up
                         mMoveUp = true;
-                    }else {
+                    } else {
                         //scroll down
                         mMoveUp = false;
                     }
                     removeCallbacks(mFling);
-                    postDelayed(mFling,FLING_DELAY_DURATION);
+                    postDelayed(mFling, FLING_DELAY_DURATION);
 
                     if (!disallowChild && (isClickHead || !isHeaderStickied())) {
                         int action = ev.getAction();
@@ -173,6 +216,9 @@ public class ScrollableLayout extends LinearLayout {
                         ev.setAction(action);
                         return dispatchResult;
                     }
+                } else {
+                    removeCallbacks(mReboundBack);
+                    postDelayed(mReboundBack, FLING_DELAY_DURATION);
                 }
                 break;
             default:
@@ -246,10 +292,19 @@ public class ScrollableLayout extends LinearLayout {
             y = 0;
         }
         mCurrentY = y;
-        if (onScrollListener != null) {
-            onScrollListener.onScroll(y, mMaxScrollY);
+        if (mOnScrollListener != null) {
+            mOnScrollListener.onScroll(y, mMaxScrollY);
         }
         super.scrollTo(x, y);
+    }
+
+    private void parallaxImage(float deltaY) {
+        mOverScrollY = (int) -deltaY;
+        Log.e(TAG, "dispatchTouchEvent --- parallaxImage : mDownY -> " + mDownY + " mLastY -> " + mLastY + " mOverScrollY -> " + mOverScrollY + " mAlreadyScaleHeader ->" + mAlreadyScaleHeader);
+        mHeaderView.getLayoutParams().height = (int) Math.min(Math.max(mHeaderView.getLayoutParams().height + mOverScrollY, mMaxHeight), mMaxHeight * mHeaderParallaxRatio);
+        float scale = mHeaderView.getLayoutParams().height * 1.0f / mMaxHeight;
+        mHeaderBg.setScaleX(scale);
+        requestLayout();
     }
 
     private void initOrResetVelocityTracker() {
@@ -283,12 +338,28 @@ public class ScrollableLayout extends LinearLayout {
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        super.onMeasure(widthMeasureSpec, MeasureSpec.makeMeasureSpec(MeasureSpec.getSize(heightMeasureSpec) + mMaxScrollY, MeasureSpec.EXACTLY));
+//        int headerHeightSpec = MeasureSpec.makeMeasureSpec(mMaxHeight + mOverScrollY,MeasureSpec.EXACTLY);
+//        mHeaderView.measure(widthMeasureSpec,headerHeightSpec);
+//        Log.d(TAG, "onMeasure: mOverScrollY ->" + mOverScrollY );
+
+        super.onMeasure(widthMeasureSpec, MeasureSpec.makeMeasureSpec(MeasureSpec.getSize(heightMeasureSpec) + mMaxScrollY + mOverScrollY, MeasureSpec.EXACTLY));
     }
 
     @Override
     protected void onFinishInflate() {
         super.onFinishInflate();
+        if (mImageBgResId != -1) {
+            mHeaderBg = findViewById(mImageBgResId);
+        } else {
+            if (mHeaderImageParallax) {
+                throw new IllegalArgumentException("You must specify imageBgResId for image parallax effect");
+            }
+        }
+
+        if (mHeaderParallaxRatio < 1.0f) {
+            throw new IllegalArgumentException("Header parallax ratio need > 1.0f");
+        }
+
         if (mHeaderResId != -1) {
             mHeaderView = findViewById(mHeaderResId);
         } else {
@@ -314,9 +385,11 @@ public class ScrollableLayout extends LinearLayout {
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
         recycleVelocityTracker();
+        removeCallbacks(mFling);
+        removeCallbacks(mReboundBack);
     }
 
-    private int dp2sp(int dp){
+    private int dp2sp(int dp) {
         return (int) (dp * getResources().getDisplayMetrics().density);
     }
 
@@ -337,13 +410,15 @@ public class ScrollableLayout extends LinearLayout {
         return mMaxScrollY;
     }
 
-    public void setOnScrollListener(OnScrollListener onScrollListener) {
-        this.onScrollListener = onScrollListener;
+    public void setmOnScrollListener(OnScrollListener mOnScrollListener) {
+        this.mOnScrollListener = mOnScrollListener;
     }
 
     public interface OnScrollListener {
 
         void onScroll(int currentY, int maxScrollY);
+
+        void onScrollExpand(View headerView, float percent);
 
     }
 }

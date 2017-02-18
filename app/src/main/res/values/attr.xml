@@ -2,8 +2,11 @@
 <resources>
 
     <declare-styleable name="ScrollableLayout">
-        <attr name="headerView" format="reference"/>
+        <attr name="headerViewId" format="reference"/>
         <attr name="headerMaxHeight" format="dimension"/>
         <attr name="headerMinHeight" format="dimension"/>
+        <attr name="headerImageViewId" format="reference"/>
+        <attr name="headerImageParallax" format="boolean"/>
+        <attr name="headerParallaxRatio" format="float"/>
     </declare-styleable>
 </resources>

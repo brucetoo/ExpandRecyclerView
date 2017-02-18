@@ -6,9 +6,12 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
+    app:headerImageParallax="true"
+    app:headerImageViewId="@+id/img_bg"
     app:headerMaxHeight="160dp"
     app:headerMinHeight="50dp"
-    app:headerView="@+id/layout_header">
+    app:headerParallaxRatio="2.0"
+    app:headerViewId="@+id/layout_header">
 
     <FrameLayout
         android:id="@+id/layout_header"
@@ -16,6 +19,7 @@
         android:layout_height="160dp">
 
         <ImageView
+            android:id="@+id/img_bg"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:background="@mipmap/img_bg"
@@ -23,13 +27,14 @@
 
         <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_marginTop="80dp">
+            android:layout_height="match_parent">
 
             <View
                 android:id="@+id/img_icon"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
+                android:layout_alignParentBottom="true"
+                android:layout_marginBottom="20dp"
                 android:layout_marginLeft="50dp"
                 android:layout_marginRight="20dp"
                 android:background="@android:color/holo_blue_light"
@@ -39,6 +44,7 @@
                 android:id="@+id/txt_title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_above="@+id/txt_desc"
                 android:layout_toRightOf="@+id/img_icon"
                 android:text="TITLE"
                 android:textColor="@android:color/black"
@@ -49,7 +55,8 @@
                 android:id="@+id/txt_desc"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_below="@+id/txt_title"
+                android:layout_alignParentBottom="true"
+                android:layout_marginBottom="20dp"
                 android:layout_toRightOf="@+id/img_icon"
                 android:text="DESCRIPTION"
                 android:textColor="@android:color/black"
@@ -59,7 +66,9 @@
                 android:id="@+id/btn_click"
                 android:layout_width="80dp"
                 android:layout_height="50dp"
+                android:layout_alignParentBottom="true"
                 android:layout_alignParentRight="true"
+                android:layout_marginBottom="20dp"
                 android:layout_marginRight="20dp"
                 android:text="BUTTON"/>
 
@@ -80,10 +89,11 @@
 
             <Space
                 android:id="@+id/space_title"
-                android:layout_width="20dp"
-                android:layout_height="20dp"
-                android:layout_alignBottom="@+id/img_back"
+                android:layout_width="10dp"
+                android:layout_height="10dp"
+                android:layout_alignBaseline="@+id/img_back"
                 android:layout_marginLeft="10dp"
+                android:layout_marginTop="10dp"
                 android:layout_toRightOf="@+id/img_back"
                 />
 
@@ -91,7 +101,7 @@
                 android:id="@+id/space_btn"
                 android:layout_width="60dp"
                 android:layout_height="40dp"
-                android:layout_alignBottom="@+id/img_back"
+                android:layout_alignBaseline="@+id/img_back"
                 android:layout_alignParentRight="true"
                 android:layout_marginRight="15dp"/>
 
@@ -100,6 +110,7 @@
     </FrameLayout>
 
     <RelativeLayout
+        android:id="@+id/layout_bottom"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
