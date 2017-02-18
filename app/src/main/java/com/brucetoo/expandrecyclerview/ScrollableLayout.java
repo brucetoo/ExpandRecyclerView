@@ -304,6 +304,9 @@ public class ScrollableLayout extends LinearLayout {
         mHeaderView.getLayoutParams().height = (int) Math.min(Math.max(mHeaderView.getLayoutParams().height + mOverScrollY, mMaxHeight), mMaxHeight * mHeaderParallaxRatio);
         float scale = mHeaderView.getLayoutParams().height * 1.0f / mMaxHeight;
         mHeaderBg.setScaleX(scale);
+        if(mOnScrollListener != null){
+            mOnScrollListener.onScrollExpand(mHeaderView,scale);
+        }
         requestLayout();
     }
 
@@ -410,14 +413,24 @@ public class ScrollableLayout extends LinearLayout {
         return mMaxScrollY;
     }
 
-    public void setmOnScrollListener(OnScrollListener mOnScrollListener) {
+    public void setOnScrollListener(OnScrollListener mOnScrollListener) {
         this.mOnScrollListener = mOnScrollListener;
     }
 
     public interface OnScrollListener {
 
+        /**
+         * HeaderView scroll between {@link #mMinHeight} and {@link #mMaxHeight}
+         * @param currentY current scrollY
+         * @param maxScrollY max scrollY = {@link #mMaxScrollY}
+         */
         void onScroll(int currentY, int maxScrollY);
 
+        /**
+         * HeaderView expand parallax call back
+         * @param headerView header view
+         * @param percent parallax percent >= 1.0f
+         */
         void onScrollExpand(View headerView, float percent);
 
     }

@@ -72,7 +72,7 @@ public class ScrollActivity extends AppCompatActivity implements AbsListView.OnS
 
 
         mScrollLayout.setScrollView(mListView);
-        mScrollLayout.setmOnScrollListener(new ScrollableLayout.OnScrollListener() {
+        mScrollLayout.setOnScrollListener(new ScrollableLayout.OnScrollListener() {
             @Override
             public void onScroll(int currentY, int maxScrollY) {
                 float percent = 1 - currentY * 1.0f / maxScrollY;
