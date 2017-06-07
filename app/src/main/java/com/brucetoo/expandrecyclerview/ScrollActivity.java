@@ -2,7 +2,7 @@ package com.brucetoo.expandrecyclerview;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.v7.app.AppCompatActivity;
+import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -23,7 +23,7 @@ import java.util.List;
  * At 14:12
  */
 
-public class ScrollActivity extends AppCompatActivity implements AbsListView.OnScrollListener {
+public class ScrollActivity extends FragmentActivity implements AbsListView.OnScrollListener {
 
     private View mIcon;
     private TextView mTitle;
@@ -61,15 +61,22 @@ public class ScrollActivity extends AppCompatActivity implements AbsListView.OnS
         mDesc = findViewById(R.id.txt_desc);
         mBg = findViewById(R.id.img_bg);
 
-        List<String> list = new ArrayList<>();
+        final List<String> list = new ArrayList<>();
         for (int i = 0; i < 20; i++) {
             list.add("String " + (i + 1));
         }
 
         mListView.addHeaderView(LayoutInflater.from(this).inflate(R.layout.list_header,null));
-        mListView.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_expandable_list_item_1, list));
+        final ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_expandable_list_item_1, list);
+        mListView.setAdapter(adapter);
         mListView.setOnScrollListener(this);
 
+        mListView.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                adapter.addAll(list);
+            }
+        },4000);
 
         mScrollLayout.setScrollView(mListView);
         mScrollLayout.setOnScrollListener(new ScrollableLayout.OnScrollListener() {
@@ -80,37 +87,19 @@ public class ScrollActivity extends AppCompatActivity implements AbsListView.OnS
                 ViewAnimator.putOn(mIcon).alpha(percent)
                     .andPutOn(mDesc).alpha(percent)
                     .andPutOn(mTitle).translationX(-titleDelta[0] * (1 - Math.max(0, percent)))
+                    .pivotX(0).pivotY(0)
                     .scale(percent < 0.75f ? 0.75f : percent)
                     .andPutOn(mBack).translationY(currentY);
 
-                //if the locationY reach the top end Y,we need adjust the translationY in opposite direction
                 if (currentY >= titleDelta[1]) {
                     ViewAnimator.putOn(mTitle).translationY(currentY - titleDelta[1]);
                 }
-                int[] loc1 = new int[2];
-                mTitle.getLocationOnScreen(loc1);
-                //if the locationY is more than the original Y,we need adjust it
-                if (titlePos[1] <= loc1[1]) {
-                    ViewAnimator.putOn(mTitle).translationY(0);
-                }
-                //textSize 25 -> 25*0.5f , textSize scale percent
-//                mTitle.setTextSize(25 * (percent < 0.5f ? 0.5f : percent));
-
-
-
-                //if the locationY reach the top end Y,we need adjust the translationY in opposite direction
+//
                 if (currentY >= btnDelta[1]) {
                     ViewAnimator.putOn(mBtn).translationY(currentY - btnDelta[1]);
                 }
-                int[] loc2 = new int[2];
-                mBtn.getLocationOnScreen(loc2);
-                //if the locationY is more than the original Y,we need adjust it
-                if (btnPos[1] <= loc2[1]) {
-                    ViewAnimator.putOn(mBtn).translationY(0);
-                }
-
-                //button scale percent
-                ViewAnimator.putOn(mBtn).translationX(btnDelta[0] * (1 - percent))
+//
+                ViewAnimator.putOn(mBtn).pivotX(0).pivotY(0).translationX(btnDelta[0] * (1 - percent))
                     .scale(percent < 0.75f ? 0.75f : percent);
 
                 Log.e("ScrollActivity", "onScroll: currentY -> " + currentY + " titleDelta_x -> " + titleDelta[0]
@@ -130,13 +119,15 @@ public class ScrollActivity extends AppCompatActivity implements AbsListView.OnS
 
                 mSpaceTitle.getLocationOnScreen(topTitlePos);
                 mTitle.getLocationOnScreen(titlePos);
-                titleDelta[0] = titlePos[0] - topTitlePos[0];
-                titleDelta[1] = titlePos[1] - topTitlePos[1];
+                titleDelta = MoveHelper.moveViewRight2Left(mTitle,mBack,30,0.75f);
 
                 mSpaceBtn.getLocationOnScreen(topBtnPos);
                 mBtn.getLocationOnScreen(btnPos);
-                btnDelta[0] = topBtnPos[0] - btnPos[0];
-                btnDelta[1] = btnPos[1] - topBtnPos[1];
+
+                btnDelta = MoveHelper.moveViewLeft2Right(mBtn,mSpaceBtn,0,0.75f);
+
+                titleW = mTitle.getMeasuredWidth();
+                titleH = mTitle.getMeasuredHeight();
 
                 Log.e("ScrollActivity", "run: titleDelta[0] -> " + titleDelta[0] + "   titleDelta[1] -> " + titleDelta[1]);
                 Log.e("ScrollActivity", "run: titlePos[0] -> " + titlePos[0] + "   topTitlePos[0] -> " + topTitlePos[0]);
@@ -146,6 +137,9 @@ public class ScrollActivity extends AppCompatActivity implements AbsListView.OnS
         });
 
     }
+
+    private int titleW;
+    private int titleH;
 
     @Override
     public void onScrollStateChanged(AbsListView view, int scrollState) {

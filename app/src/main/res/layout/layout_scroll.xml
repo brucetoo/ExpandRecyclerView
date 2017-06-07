@@ -92,18 +92,20 @@
                 android:layout_width="10dp"
                 android:layout_height="10dp"
                 android:layout_alignBaseline="@+id/img_back"
-                android:layout_marginLeft="10dp"
+                android:layout_marginLeft="0dp"
                 android:layout_marginTop="10dp"
                 android:layout_toRightOf="@+id/img_back"
                 />
 
-            <Space
+            <View
                 android:id="@+id/space_btn"
-                android:layout_width="60dp"
-                android:layout_height="40dp"
+                android:layout_width="10dp"
+                android:layout_height="10dp"
                 android:layout_alignBaseline="@+id/img_back"
                 android:layout_alignParentRight="true"
-                android:layout_marginRight="15dp"/>
+                android:layout_marginRight="15dp"
+                android:layout_marginTop="10dp"
+                android:background="@color/colorAccent"/>
 
         </RelativeLayout>
 
