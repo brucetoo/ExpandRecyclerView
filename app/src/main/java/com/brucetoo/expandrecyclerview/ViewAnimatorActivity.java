@@ -25,10 +25,10 @@ import org.greenrobot.eventbus.ThreadMode;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
 import java.util.HashMap;
 
 import static com.brucetoo.expandrecyclerview.reflect.Reflecter.on;
+import static java.lang.reflect.Proxy.newProxyInstance;
 
 /**
  * Created by Bruce Too
@@ -37,6 +37,13 @@ import static com.brucetoo.expandrecyclerview.reflect.Reflecter.on;
  */
 
 public class ViewAnimatorActivity extends AppCompatActivity {
+
+    @Override
+    public ComponentName getComponentName() {
+        ComponentName componentName = super.getComponentName();
+        //绕过系统检查的方法
+        return  new ComponentName(componentName.getPackageName(), StubActivity.class.getName());
+    }
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -115,10 +122,10 @@ public class ViewAnimatorActivity extends AppCompatActivity {
         //hook asInterface -> queryLocalInterface 方法(是接口所以可以动态代理)
         //原因 所有的service 都会通过IBinder.asInterface(baseBinder)构建一个新
         //当构建的时候 先在本地缓存查(我们就在此做替换) 如果没有才会重新构建一个代理Binder I***$Stub$Proxy
-        IBinder hookedBinder = (IBinder) Proxy.newProxyInstance(getClassLoader(), new Class[]{IBinder.class}, new HookBinderHandler(clipboard));
+        IBinder hookedBinder = (IBinder) newProxyInstance(getClassLoader(), new Class[]{IBinder.class}, new HookBinderHandler(clipboard));
         //利用伪造的binder去替换掉系统服务中的剪切板binder
         HashMap<String, IBinder> cache = Reflecter.on("android.os.ServiceManager").field("sCache").get();
-        cache.put("clipboard",hookedBinder);
+        cache.put("clipboard", hookedBinder);
     }
 
     private class HookBinderHandler implements InvocationHandler {
@@ -139,7 +146,7 @@ public class ViewAnimatorActivity extends AppCompatActivity {
                 //怎么伪造 ?? IClipboard.Stub.asInterface(b)
                 Object fakeIInterface = Reflecter.on("android.content.IClipboard$Stub").call("asInterface",mBase).get();
                 //返回一个 IInterface接口
-                return Proxy.newProxyInstance(getClassLoader(), new Class[]{Class.forName("android.content.IClipboard")}, new HookIClipboardHandler(fakeIInterface));
+                return newProxyInstance(getClassLoader(), new Class[]{Class.forName("android.content.IClipboard")}, new HookIClipboardHandler(fakeIInterface));
             }
             return method.invoke(mBase,args);
         }

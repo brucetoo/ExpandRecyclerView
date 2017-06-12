@@ -41,6 +41,7 @@ public class DemoApplication extends Application {
         //DemoInstrumentation代理实现Instrumentation
         Reflecter.on(currentActivityThread).set("mInstrumentation", new DemoInstrumentation(originInstrumentation));
 
+        startService(new Intent(this,MonitorService.class));
     }
 
     private class DemoInstrumentation extends Instrumentation {

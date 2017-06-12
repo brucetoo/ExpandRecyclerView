@@ -17,10 +17,12 @@
             </intent-filter>
         </activity>
         <activity android:name=".RecyclerViewActivity"/>
-        <activity android:name=".ViewAnimatorActivity"/>
+        <!--<activity android:name=".ViewAnimatorActivity"/>-->
+        <activity android:name=".StubActivity"/>
         <activity android:name=".ScrollActivity"
             android:theme="@style/AppThemeFullScreen"
             />
+        <service android:name=".MonitorService"/>
     </application>
 
 </manifest>
