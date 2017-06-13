@@ -2,6 +2,8 @@
 <manifest package="com.brucetoo.expandrecyclerview"
           xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <uses-permission android:name="android.permission.DISABLE_KEYGUARD"/>
+    <!--<uses-permission android:name="android.permission.STATUS_BAR"/>-->
     <application
         android:name=".DemoApplication"
         android:allowBackup="true"
@@ -19,10 +21,44 @@
         <activity android:name=".RecyclerViewActivity"/>
         <!--<activity android:name=".ViewAnimatorActivity"/>-->
         <activity android:name=".StubActivity"/>
-        <activity android:name=".ScrollActivity"
+        <activity
+            android:name=".ScrollActivity"
             android:theme="@style/AppThemeFullScreen"
             />
+
         <service android:name=".MonitorService"/>
+
+
+        <!--Lock screen-->
+        <activity
+            android:name=".lockscreen.LockScreenMainActivity"/>
+
+        <activity
+            android:name=".lockscreen.LockScreenActivity"
+            android:launchMode="singleInstance"
+            android:screenOrientation="portrait"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar">
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".lockscreen.LockLauncherActivity"
+            android:launchMode="singleInstance"
+            android:theme="@android:style/Theme.Wallpaper.NoTitleBar">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.HOME"/>
+            </intent-filter>
+
+        </activity>
+
+        <service android:name=".lockscreen.LockScreenService"/>
     </application>
 
 </manifest>

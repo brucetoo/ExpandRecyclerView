@@ -8,13 +8,11 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
-import android.view.Window;
 
 import com.brucetoo.expandrecyclerview.reflect.Reflecter;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
 
 /**
  * Created by Bruce Too
@@ -73,8 +71,8 @@ public class DemoApplication extends Application {
             Log.i("DemoInstrumentation", "callActivityOnCreate: " + activity + "");
 
             //动态代理 activity的接口 Window.Callback
-            Object callBack = Proxy.newProxyInstance(getClassLoader(), new Class[]{Window.Callback.class}, new DemoInvocationHandler(activity));
-            Reflecter.on(activity.getWindow()).set("mCallback",callBack);
+//            Object callBack = Proxy.newProxyInstance(getClassLoader(), new Class[]{Window.Callback.class}, new DemoInvocationHandler(activity));
+//            Reflecter.on(activity.getWindow()).set("mCallback",callBack);
         }
     }
 

@@ -26,4 +26,12 @@
         android:onClick="onClickThree"
         />
 
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="50dp"
+        android:text="LockScreen"
+        android:onClick="onClickFour"
+        />
+
+
 </LinearLayout>

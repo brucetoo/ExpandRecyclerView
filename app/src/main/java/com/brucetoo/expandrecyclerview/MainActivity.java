@@ -6,6 +6,8 @@ import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 
+import com.brucetoo.expandrecyclerview.lockscreen.LockScreenMainActivity;
+
 /**
  * Created by Bruce Too
  * On 12/01/2017.
@@ -35,6 +37,12 @@ public class MainActivity extends AppCompatActivity{
     public void onClickThree(View view){
         Intent intent = new Intent();
         intent.setClass(this,ScrollActivity.class);
+        startActivity(intent);
+    }
+
+    public void onClickFour(View view){
+        Intent intent = new Intent();
+        intent.setClass(this,LockScreenMainActivity.class);
         startActivity(intent);
     }
 }
