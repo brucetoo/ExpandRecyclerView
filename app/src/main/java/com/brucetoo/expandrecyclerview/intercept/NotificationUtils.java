@@ -3,6 +3,7 @@ package com.brucetoo.expandrecyclerview.intercept;
 import android.annotation.TargetApi;
 import android.app.PendingIntent;
 import android.content.ComponentName;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
@@ -10,6 +11,7 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.content.res.Resources;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
@@ -18,6 +20,7 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
 import android.provider.CallLog;
+import android.provider.ContactsContract;
 import android.provider.Settings;
 import android.provider.Telephony;
 import android.service.notification.StatusBarNotification;
@@ -26,6 +29,9 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.Log;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by Bruce Too
@@ -265,5 +271,45 @@ public class NotificationUtils {
         }
         return "";
     }
+
+    public static Map<String, String> getAllContracts(@NonNull Context context) {
+        Map<String, String> contracts = new HashMap<>();
+        ContentResolver cr = context.getContentResolver();
+        Cursor cur = cr.query(ContactsContract.Contacts.CONTENT_URI,
+            null, null, null, null);
+
+        if (cur != null && cur.getCount() > 0) {
+            while (cur.moveToNext()) {
+                String id = cur.getString(
+                    cur.getColumnIndex(ContactsContract.Contacts._ID));
+                String name = cur.getString(cur.getColumnIndex(
+                    ContactsContract.Contacts.DISPLAY_NAME));
+
+                if (cur.getInt(cur.getColumnIndex(
+                    ContactsContract.Contacts.HAS_PHONE_NUMBER)) > 0) {
+                    Cursor pCur = cr.query(
+                        ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                        null,
+                        ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?",
+                        new String[]{id}, null);
+                    if (pCur != null) {
+                        while (pCur.moveToNext()) {
+                            String phoneNo = pCur.getString(pCur.getColumnIndex(
+                                ContactsContract.CommonDataKinds.Phone.NUMBER));
+                            contracts.put(phoneNo, name);
+                        }
+                        pCur.close();
+                    }
+                }
+            }
+        }
+        return contracts;
+    }
+
+    public static String getNameByPhoneNumber(Context context, String number) {
+        String name = getAllContracts(context).get(number);
+        return TextUtils.isEmpty(name) ? "陌生号码" : name;
+    }
+
 }
 

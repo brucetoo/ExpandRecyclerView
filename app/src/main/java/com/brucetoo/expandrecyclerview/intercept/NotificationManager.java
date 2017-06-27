@@ -70,13 +70,14 @@ public class NotificationManager {
     }
 
     public static void addSms(String from, String body) {
-        NotificationBean bean = new NotificationBean(NotificationUtils.getDefaultSmsApp(getContext()), from, body);
+        NotificationBean bean = new NotificationBean(NotificationUtils.getDefaultSmsApp(getContext()),
+            NotificationUtils.getNameByPhoneNumber(getContext(),from), body);
         bean.when = getDateString(System.currentTimeMillis());
         sNotification.add(bean);
     }
 
-    public static void addPhone(String title, String number) {
-        NotificationBean bean = new NotificationBean(NotificationUtils.getDefaultDialerApp(getContext()), title, number);
+    public static void addPhone(String number) {
+        NotificationBean bean = new NotificationBean(NotificationUtils.getDefaultDialerApp(getContext()), NotificationUtils.getNameByPhoneNumber(getContext(),number), number);
         bean.when = getDateString(System.currentTimeMillis());
         sNotification.add(bean);
     }

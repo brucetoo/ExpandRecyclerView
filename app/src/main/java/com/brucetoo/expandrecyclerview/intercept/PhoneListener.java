@@ -45,7 +45,7 @@ public class PhoneListener extends BroadcastReceiver {
                     if (needIntercept(incomingNumber)) {
                         TelephonyManager tm = (TelephonyManager) context.getSystemService(Service.TELEPHONY_SERVICE);
                         Reflecter.on(tm).call("getITelephony").call("endCall");
-                        NotificationManager.addPhone("Missed Call", incomingNumber);
+                        NotificationManager.addPhone(incomingNumber);
                     }
                     break;
             }
