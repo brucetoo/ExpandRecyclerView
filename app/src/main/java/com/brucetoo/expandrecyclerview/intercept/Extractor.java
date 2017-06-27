@@ -115,8 +115,10 @@ public class Extractor {
                 }
             }
         } else {
-            n.finalTitle = n.titleText.toString();
-            n.finalDesc = n.messageText.toString();
+            if(n.messageText != null && n.titleText != null) {
+                n.finalTitle = n.titleText.toString();
+                n.finalDesc = n.messageText.toString();
+            }
         }
     }
 

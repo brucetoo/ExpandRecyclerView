@@ -8,6 +8,7 @@ import android.os.Parcel;
 import android.service.notification.StatusBarNotification;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
+import android.text.TextUtils;
 import android.util.Log;
 
 import com.brucetoo.expandrecyclerview.DemoApplication;
@@ -63,7 +64,9 @@ public class NotificationManager {
     public static void add(final NotificationBean notification, StatusBarNotification sbn) {
         Extractor.get().startExtractor(getContext(), notification, sbn.getNotification());
         notification.when = getDateString(System.currentTimeMillis());
-        sNotification.add(notification);
+        if(!TextUtils.isEmpty(notification.finalTitle) && !TextUtils.isEmpty(notification.finalDesc)) {
+            sNotification.add(notification);
+        }
     }
 
     public static void addSms(String from, String body) {
