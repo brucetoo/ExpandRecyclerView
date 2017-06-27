@@ -17,8 +17,11 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -128,11 +131,22 @@ public class NotificationManager {
 
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     public static void read(final FetchAllListener listener) {
+        read(listener, false);
+    }
+
+    /**
+     * Read history notification with listener and sort options
+     *
+     * @param listener  call back when fetch success(UI Thread)
+     * @param increment sort by increment or not,default is decrement
+     */
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
+    public static void read(final FetchAllListener listener, final boolean increment) {
         sThreadPool.execute(new Runnable() {
             @Override
             public void run() {
                 final ArrayList<NotificationBean> beans = getBeansInFile();
-                handleIconDrawable(beans);
+                handleParamsAndSort(beans, increment);
                 mHandler.post(new Runnable() {
                     @Override
                     public void run() {
@@ -149,7 +163,7 @@ public class NotificationManager {
             @Override
             public void run() {
                 final ArrayList<NotificationBean> beans = getBeansInFile();
-                handleIconDrawable(beans);
+                handleParamsAndSort(beans, false);
                 mHandler.post(new Runnable() {
                     @Override
                     public void run() {
@@ -160,10 +174,16 @@ public class NotificationManager {
         });
     }
 
-    private static void handleIconDrawable(ArrayList<NotificationBean> beans) {
+    private static void handleParamsAndSort(ArrayList<NotificationBean> beans, final boolean increment) {
         for (NotificationBean bean : beans) {
             bean.iconDrawable = NotificationUtils.getDrawable(getContext(), bean.packageName);
         }
+        Collections.sort(beans, new Comparator<NotificationBean>() {
+            @Override
+            public int compare(NotificationBean lhs, NotificationBean rhs) {
+                return getDateLong(lhs.when) < getDateLong(rhs.when) && !increment ? 1 : -1;
+            }
+        });
     }
 
     @NonNull
@@ -211,6 +231,17 @@ public class NotificationManager {
     private static String getDateString(long when) {
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
         return format.format(new Date(when));
+    }
+
+    private static long getDateLong(String date) {
+        SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+        try {
+            Date d = f.parse(date);
+            return d.getTime();
+        } catch (ParseException e) {
+            e.printStackTrace();
+            return -1;
+        }
     }
 
     public interface FetchAllListener {
