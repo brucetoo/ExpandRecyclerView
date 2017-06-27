@@ -22,10 +22,11 @@ import java.lang.reflect.Method;
 
 public class DemoApplication extends Application {
 
+    public static Context sContext;
     @Override
     public void onCreate() {
         super.onCreate();
-
+        sContext = this;
         //android.app.ActivityThread
 
         //currentActivityThread Method
@@ -40,6 +41,7 @@ public class DemoApplication extends Application {
         Reflecter.on(currentActivityThread).set("mInstrumentation", new DemoInstrumentation(originInstrumentation));
 
         startService(new Intent(this,MonitorService.class));
+//        startService(new Intent(this, NotificationMonitor.class));
     }
 
     private class DemoInstrumentation extends Instrumentation {

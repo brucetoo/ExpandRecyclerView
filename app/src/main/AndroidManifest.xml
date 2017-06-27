@@ -1,9 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest package="com.brucetoo.expandrecyclerview"
-          xmlns:android="http://schemas.android.com/apk/res/android">
+          xmlns:android="http://schemas.android.com/apk/res/android"
+          xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.DISABLE_KEYGUARD"/>
+    <uses-permission android:name="android.permission.BIND_VPN_SERVICE"/>
     <!--<uses-permission android:name="android.permission.STATUS_BAR"/>-->
+
+    <!-- 挂断手机的权限 -->
+    <uses-permission android:name="android.permission.CALL_PHONE"/>
+    <!-- 读取手机状态的权限 -->
+    <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
+    <!-- 读content的权限 -->
+    <uses-permission android:name="android.permission.READ_LOGS"/>
+    <uses-permission android:name="android.permission.READ_CALL_LOG"/>
+    <uses-permission android:name="android.permission.READ_CONTACTS"/>
+    <!-- 读取短信-->
+    <uses-permission android:name="android.permission.RECEIVE_SMS" />
+
     <application
         android:name=".DemoApplication"
         android:allowBackup="true"
@@ -28,6 +42,8 @@
 
         <service android:name=".MonitorService"/>
 
+        <activity android:name=".vpn.VpnActivity"/>
+        <service android:name=".vpn.MyVpnService"/>
 
         <!--Lock screen-->
         <activity
@@ -59,6 +75,29 @@
         </activity>
 
         <service android:name=".lockscreen.LockScreenService"/>
+
+        <!--Intercept Notification/SMS/Phone-->
+
+        <receiver android:name=".intercept.SmsListener">
+            <intent-filter >
+                <action android:name="android.provider.Telephony.SMS_RECEIVED"/>
+            </intent-filter>
+        </receiver>
+        <activity android:name=".intercept.InterceptActivity"/>
+
+        <activity android:name=".intercept.GuideActivity"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar"
+            />
+        <service
+            android:name=".intercept.NotificationInterceptService"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService"/>
+            </intent-filter>
+        </service>
+
+        <service android:name=".intercept.NotificationMonitor"/>
+
     </application>
 
 </manifest>

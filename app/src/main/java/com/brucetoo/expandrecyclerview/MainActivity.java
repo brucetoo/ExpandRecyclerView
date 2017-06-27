@@ -6,6 +6,7 @@ import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 
+import com.brucetoo.expandrecyclerview.intercept.InterceptActivity;
 import com.brucetoo.expandrecyclerview.lockscreen.LockScreenMainActivity;
 
 /**
@@ -43,6 +44,12 @@ public class MainActivity extends AppCompatActivity{
     public void onClickFour(View view){
         Intent intent = new Intent();
         intent.setClass(this,LockScreenMainActivity.class);
+        startActivity(intent);
+    }
+
+    public void onClickFive(View view){
+        Intent intent = new Intent();
+        intent.setClass(this,InterceptActivity.class);
         startActivity(intent);
     }
 }

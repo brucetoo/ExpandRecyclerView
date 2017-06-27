@@ -8,6 +8,7 @@ import android.content.ServiceConnection;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.os.Looper;
 import android.os.RemoteException;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
@@ -22,6 +23,12 @@ import com.brucetoo.expandrecyclerview.reflect.Reflecter;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
+import org.jdeferred.DeferredCallable;
+import org.jdeferred.DoneCallback;
+import org.jdeferred.FailCallback;
+import org.jdeferred.ProgressCallback;
+import org.jdeferred.android.AndroidDeferredManager;
+import org.jdeferred.android.DeferredAsyncTask;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -126,6 +133,64 @@ public class ViewAnimatorActivity extends AppCompatActivity {
         //利用伪造的binder去替换掉系统服务中的剪切板binder
         HashMap<String, IBinder> cache = Reflecter.on("android.os.ServiceManager").field("sCache").get();
         cache.put("clipboard", hookedBinder);
+
+        deferredUsage();
+    }
+
+    private void deferredUsage() {
+        AndroidDeferredManager manager = new AndroidDeferredManager();
+        manager.when(new DeferredAsyncTask<Void, Integer, String>() {
+            @Override
+            protected String doInBackgroundSafe(Void... params) throws Exception {
+                notify(100);
+                return "调用  doInBackgroundSafe";
+            }
+        }).progress(new ProgressCallback<Integer>() {
+            @Override
+            public void onProgress(Integer progress) {
+                Log.i("deferredUsage", "onProgress: " + progress);
+            }
+        }).done(new DoneCallback<String>() {
+            @Override
+            public void onDone(String result) {
+                Log.i("deferredUsage", "onFetchDone: " + result);
+            }
+        });
+
+        manager.when(new DeferredCallable<String, Integer>() {
+            @Override
+            public String call() throws Exception {
+//                getDeferred().reject(new Throwable("测试 Throwable"));
+                Log.e("deferredUsage", "call in main thread ? " +(Looper.getMainLooper() == Looper.myLooper()));
+                for (int i = 0; i <= 2; i++) {
+                    notify(i * 100);
+                    if(i == 2) {
+                        Thread.sleep(2000);
+                        getDeferred().resolve("This is result!!!!");
+                    }
+                }
+                return "Call";
+            }
+        }).done(new DoneCallback<String>() {
+            @Override
+            public void onDone(String result) {
+                Log.i("deferredUsage", "2 onFetchDone : " + result);
+            }
+        }).progress(new ProgressCallback<Integer>() {
+            @Override
+            public void onProgress(Integer progress) {
+                Log.i("deferredUsage", " 2 onProgress : " + progress);
+            }
+        }).fail(new FailCallback<Throwable>() {
+            @Override
+            public void onFail(Throwable result) {
+                Log.i("deferredUsage", " 2 onFail : " + result.toString());
+            }
+        });
+
+
+
+
     }
 
     private class HookBinderHandler implements InvocationHandler {

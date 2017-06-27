@@ -64,25 +64,27 @@ public class MonitorService extends Service {
         Reflecter.on(activityThread).field("mH").set("mCallback", new HookCallBack(baseMH));
     }
 
-    private class HookCallBack implements Handler.Callback{
+    private class HookCallBack implements Handler.Callback {
 
         Handler base;
-        public HookCallBack(Handler base){
+
+        public HookCallBack(Handler base) {
             this.base = base;
         }
 
         @Override
         public boolean handleMessage(Message msg) {
-            if(msg.what == 100){//start_activity
+            if (msg.what == 100) {//start_activity
                 //将intent中的Component换成替换之前的
                 //intent在哪里？ ActivityClientRecord.intent
                 // final ActivityThread.ActivityClientRecord r = (ActivityClientRecord) msg.obj;
                 Intent now = Reflecter.on(msg.obj).get("intent");
                 Intent old = now.getParcelableExtra("old_intent");
-                if(old != null) {
+                if (old != null) {
                     now.setComponent(old.getComponent());
                 }
             }
+
             base.handleMessage(msg);
             return true;
         }
@@ -104,7 +106,7 @@ public class MonitorService extends Service {
 //                    String resolvedType, IBinder resultTo, String resultWho, int requestCode, int flags,
 //                ProfilerInfo profilerInfo, Bundle options) throws RemoteException
 
-                Intent old ;
+                Intent old;
                 int index = 0;
                 for (int i = 0; i < args.length; i++) {
                     if (args[i] instanceof Intent) {
@@ -117,12 +119,15 @@ public class MonitorService extends Service {
                 Intent newIn = new Intent();
                 //包名 + 类名
                 String pagepackage = "com.brucetoo.expandrecyclerview";
-                Log.i(TAG, "invoke: oldComponent -> " + old.getComponent().toString());
-                //只关心启动这个
-                if (old.getComponent().getClassName().contains("ViewAnimatorActivity")) {
-                    newIn.setComponent(new ComponentName(pagepackage, StubActivity.class.getName()));
-                    newIn.putExtra("old_intent", old);
-                    args[index] = newIn;
+                //ignore system setting options!
+                if (old != null && old.getComponent() != null) {
+                    Log.i(TAG, "invoke: oldComponent -> " + old.getComponent().toString());
+                    //只关心启动这个
+                    if (old.getComponent().getClassName().contains("ViewAnimatorActivity")) {
+                        newIn.setComponent(new ComponentName(pagepackage, StubActivity.class.getName()));
+                        newIn.putExtra("old_intent", old);
+                        args[index] = newIn;
+                    }
                 }
                 return method.invoke(base, args);
             }
