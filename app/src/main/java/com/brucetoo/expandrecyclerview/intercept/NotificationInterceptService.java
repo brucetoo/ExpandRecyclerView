@@ -1,7 +1,6 @@
 package com.brucetoo.expandrecyclerview.intercept;
 
 import android.annotation.SuppressLint;
-import android.app.Notification;
 import android.os.Build;
 import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
@@ -32,11 +31,6 @@ public class NotificationInterceptService extends NotificationListenerService {
     @Override
     public void onCreate() {
         super.onCreate();
-        //foreground keep alive
-        try {
-            startForeground(250, new Notification());
-        } catch (Exception e) {
-        }
         Log.i(TAG, "onCreate: NotificationInterceptService on");
         sService = this;
     }

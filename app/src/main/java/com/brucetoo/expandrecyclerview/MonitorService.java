@@ -3,6 +3,7 @@ package com.brucetoo.expandrecyclerview;
 import android.app.Service;
 import android.content.ComponentName;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
@@ -45,8 +46,14 @@ public class MonitorService extends Service {
         //最终执行startActivity是在 Instrumentation #1507 ActivityManagerNative.getDefault()
 //                .startActivity
         //获取IActivityManager服务
-        Object gDefault = Reflecter.on("android.app.ActivityManagerNative").get("gDefault");
-        Object iAM = Reflecter.on(gDefault).get("mInstance");//mInstance就代表 IActivityManager
+        Object singleton;
+        Object iAM;
+        if(Build.VERSION.SDK_INT > 25){//8.0+
+            singleton = Reflecter.on("android.app.ActivityManager").get("IActivityManagerSingleton");
+        }else {
+            singleton = Reflecter.on("android.app.ActivityManagerNative").get("singleton");
+        }
+        iAM = Reflecter.on(singleton).get("mInstance");//mInstance就代表 IActivityManager
         Class<?> aClass = null;
         try {
             aClass = Class.forName("android.app.IActivityManager");
@@ -56,7 +63,7 @@ public class MonitorService extends Service {
         //设置动态代理 IActivityManager 的回调方法,特别是startActivity方法
         Object hookIAM = Proxy.newProxyInstance(getClassLoader(), new Class[]{aClass}, new HookIActivityManager(iAM));
         //将hook后的对象塞到原本的mInstance中
-        Reflecter.on(gDefault).set("mInstance", hookIAM);
+        Reflecter.on(singleton).set("mInstance", hookIAM);
 
         Object activityThread = Reflecter.on("android.app.ActivityThread").call("currentActivityThread").get();
         Handler baseMH = Reflecter.on(activityThread).get("mH");
